@@ -1,124 +1,138 @@
 <script lang="ts">
   import { onMount } from "svelte";
-  import { points, settings } from "./state";
-  import { CONSTANTS, Point, parseIntersections } from ".";
+  import { points, config } from "./state";
+  import { CONSTANTS, PathPoint, Point, state } from ".";
   import { writable } from "svelte/store";
-  import fieldImage from "../assets/field.png";
   import { catmullRom } from "../gen";
-
-  let size = 0;
+  import { getWindowPoint, render as renderCanvas, transformPoint } from "./renderLogic";
 
   let canvas: HTMLCanvasElement = null as any;
 
-  $: scale = size / CONSTANTS.scale;
+  $: ctx = canvas ? canvas.getContext("2d")! : null;
 
-  const transformPoint = (point: Point) => {
-    const p = point.clone();
-    p.x = point.x * (canvas.width / 2 / CONSTANTS.scale) + canvas.width / 2;
-    p.y = point.y * (canvas.height / 2 / -CONSTANTS.scale) + canvas.height / 2;
-    return p;
-  };
+  let mouse = new Point(0, 0);
 
-  const getWindowPoint = (point: Point) => {
-    const p = transformPoint(point);
-    const rect = canvas.getBoundingClientRect();
-    return new Point(p.x + rect.left, p.y + rect.top);
-  };
+  let size = 0;
 
-  const mouse = writable(new Point(0, 0));
-  const field = new Image();
-  field.src = fieldImage;
+  let dragging: {
+    index: number;
+    offset: Point;
+    dragged: boolean;
+  } | null = null;
 
   onMount(() => {
-		const container = canvas.parentElement as HTMLDivElement;
     const resize = () => {
+      const container = canvas.parentElement!;
       size = Math.min(container.clientWidth, container.clientHeight);
     };
 
     window.addEventListener("resize", resize);
     resize();
 
-    const ctx = canvas.getContext("2d")!;
-    const render = () => {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
+    renderCanvas(canvas.getContext("2d")!, mouse);
 
-      ctx.drawImage(field, 0, 0, canvas.width, canvas.height);
+    const undo = () => points.update((p) => p.slice(0, -1));
 
-      // draw boundaries?
-      CONSTANTS.barriers.forEach((boundary) => {
-        ctx.beginPath();
-        ctx.strokeStyle = "white";
-        const points = [...boundary].map((item) => transformPoint(item));
-        ctx.moveTo(points[0].x, points[0].y);
-        points.slice(1).forEach((point) => ctx.lineTo(point.x, point.y));
-        ctx.stroke();
-      });
+    canvas.addEventListener("mousemove", (e) => {
+      const rect = canvas.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
 
-      // draw path
-      if ($points.length >= 2) {
-        const waypoints = $points.map((point) => point.clone());
+      mouse.x = ((x - canvas.width / 2) / (canvas.width / 2)) * CONSTANTS.scale;
+      mouse.y = (-(y - canvas.height / 2) / (canvas.height / 2)) * CONSTANTS.scale;
+    });
+    canvas.addEventListener("mousedown", (e) => {
+      const rect = canvas.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
 
-        if ($settings.method === "catmull-rom") {
-          const first = waypoints[0];
-          const second = waypoints[1];
-          const last = waypoints[waypoints.length - 1];
-          const firstGhostPoint = first.multiply(2).subtract(second);
-          waypoints.unshift(firstGhostPoint);
+      mouse.x = ((x - canvas.width / 2) / (canvas.width / 2)) * CONSTANTS.scale;
+      mouse.y = (-(y - canvas.height / 2) / (canvas.height / 2)) * CONSTANTS.scale;
+    });
 
-          waypoints.push(last);
-
-          // Path Generation
-          const path = parseIntersections(
-            catmullRom(waypoints),
-            CONSTANTS.barriers.flat()
-          ).map((point) => transformPoint(point));
-          // Draw the generated path
-
-          for (let i = 0; i < path.length - 1; i++) {
-            ctx.beginPath();
-            ctx.moveTo(path[i].x, path[i].y);
-            ctx.lineTo(path[i + 1].x, path[i + 1].y);
-            ctx.strokeStyle = path[i].data.intersects
-              ? CONSTANTS.path.error
-              : CONSTANTS.path.color;
-            ctx.lineWidth = CONSTANTS.path.thickness;
-            ctx.stroke();
-          }
-        }
+    const keydown = (e: KeyboardEvent) => {
+      let found = true;
+      switch (e.key.toLowerCase()) {
+        case "z":
+          e.ctrlKey && undo();
+          break;
+        default:
+          found = false;
+          break;
       }
 
-      // draw points?
-      $points.forEach((point) => {
-        const p = transformPoint(point);
-        const m = transformPoint($mouse);
-        ctx.beginPath();
-        ctx.arc(p.x, p.y, CONSTANTS.point.radius * scale, 0, Math.PI * 2);
-        ctx.lineWidth = CONSTANTS.point.border.thickness * scale;
-        ctx.strokeStyle = CONSTANTS.point.border.color;
-        ctx.fillStyle =
-          p.distance(m) <= CONSTANTS.point.radius * scale
-            ? CONSTANTS.point.hover
-            : CONSTANTS.point.color;
-
-        ctx.fill();
-        ctx.stroke();
-      });
-
-      // draw mouse?
-      const m = transformPoint($mouse);
-      ctx.beginPath();
-      ctx.arc(m.x, m.y, 1, 0, Math.PI * 2);
-      ctx.fillStyle = "white";
-      ctx.fill();
-      ctx.closePath();
-
-      requestAnimationFrame(render);
+      if (found) e.preventDefault();
     };
 
-    field.addEventListener("load", () => {
-      requestAnimationFrame(render);
+    document.querySelector("#undo")?.addEventListener("click", undo);
+
+    window.addEventListener("keydown", keydown);
+
+    canvas.addEventListener("mousedown", () => {
+      const m = transformPoint(mouse, canvas);
+      $state.selected = $points.findIndex(
+        (point) =>
+          transformPoint(point, canvas).distance(m) <=
+          CONSTANTS.point.radius * (size / CONSTANTS.scale)
+      );
+
+      if ($state.selected === -1) {
+        // spawn new point
+        points.update((p) => {
+          p.push(new PathPoint(mouse.x, mouse.y, { flags: {} }));
+          return p;
+        });
+      } else {
+        dragging = {
+          index: $state.selected,
+          offset: new Point(
+            mouse.x - $points[$state.selected].x,
+            mouse.y - $points[$state.selected].y
+          ),
+          dragged: false,
+        };
+        0;
+      }
+    });
+
+    document.addEventListener("mouseup", (e) => {
+      if (dragging && !dragging.dragged) {
+        e.stopImmediatePropagation();
+        const p = getWindowPoint($points[dragging.index], canvas);
+        p.x += 20;
+        const index = dragging.index;
+        // showMenu([{ label: "Delete", action: () => $points.splice(index, 1) }], p);
+      }
+
+      dragging = null;
+    });
+
+    document.addEventListener("mousemove", () => {
+      if (dragging) {
+        dragging.dragged = true;
+        points.update((p) => {
+          p[dragging?.index!].set(
+            new Point(mouse.x - dragging?.offset.x!, mouse.y - dragging?.offset.y!)
+          );
+          return p;
+        });
+      }
+    });
+
+    // very cursed thing to get it to render on initial load
+    setTimeout(() => {
+      mouse.x = 0;
     });
   });
+
+  $: if (ctx) {
+    // dependencies for rerendering
+    $points;
+    $state;
+    $config;
+    size;
+    renderCanvas(ctx, mouse);
+  }
 </script>
 
 <canvas width={size} height={size} bind:this={canvas} />

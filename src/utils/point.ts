@@ -2,23 +2,10 @@ export class Point {
   x: number;
   y: number;
 
-  static defaultOptions = {
-    speed: 0,
-    index: 0,
-    data: {} as any,
-  };
-  speed: number;
-  index: number;
-  data: any;
-
   // x and y coordinates in cartesian plane
-  constructor(x: number, y: number, options = Point.defaultOptions) {
+  constructor(x: number, y: number) {
     this.x = x;
     this.y = y;
-
-    this.speed = options.speed;
-    this.index = options.index;
-    this.data = options.data;
   }
 
   // adds x coords of each point and y coords of each point
@@ -120,19 +107,14 @@ export class Point {
   }
 
   clone() {
-    return new Point(this.x, this.y, {
-      speed: this.speed,
-      index: this.index,
-      data: JSON.parse(JSON.stringify(this.data)),
-    });
+    return new Point(this.x, this.y);
   }
 
   set(p: Point) {
-    this.x = p.x;
-    this.y = p.y;
-    this.speed = p.speed;
-    this.index = p.index;
-    this.data = JSON.parse(JSON.stringify(this.data));
+    for (const key in p) {
+      // @ts-ignore
+      if (typeof p[key] !== "function") this[key] = p[key];
+    }
   }
 
   export() {

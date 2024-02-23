@@ -1,4 +1,5 @@
-import { Point } from "../utils";
+import { catmullRom } from ".";
+import { PathPoint, Point } from "../utils";
 
 export const findDerivative = (p0: Point, p1: Point, p2: Point, p3: Point, t: number) => {
   const c1 = p0.multiply(-0.5).add(p2.multiply(0.5));
@@ -41,5 +42,10 @@ export const findPoint = (p0: Point, p1: Point, p2: Point, p3: Point, t: number)
   const t3 = t2 * t;
 
   const newPoint = c0.add(c1.multiply(t)).add(c2.multiply(t2)).add(c3.multiply(t3));
-  return newPoint;
+  return new GeneratedPoint(newPoint.x, newPoint.y);
 };
+
+export class GeneratedPoint extends Point {
+	speed: number = 0;
+	index: number = 0;
+}

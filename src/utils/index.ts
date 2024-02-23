@@ -24,6 +24,6 @@ export const CONSTANTS = {
   path: {
     color: "#00FF00",
     error: "#FF0000",
-    thickness: 0.5,
+    thickness: 2,
   },
 };

@@ -1,5 +1,13 @@
 <script lang="ts">
   import Renderer from "./utils/Renderer.svelte";
+  import { config, state } from "./utils/state";
+
+  config.subscribe((v) => {
+    if (v.autosave && !$state.fileHandle) {
+      alert("Please save the file before enabling autosave");
+      config.update((v) => ({ ...v, autosave: false }));
+    }
+  });
 </script>
 
 <main>
@@ -16,7 +24,12 @@
         <div class="flex gap-3 items-center">
           <div class="flex border-2 px-2 rounded-full border-transparent items-center">
             AutoSave™️
-            <input type="checkbox" class="ml-1" id="autosave" />
+            <input
+              type="checkbox"
+              class="ml-1"
+              id="autosave"
+              bind:checked={$config.autosave}
+            />
           </div>
           <button id="import" class="button">Import</button>
           <button id="save" class="button">Save</button>

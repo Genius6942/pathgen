@@ -1,9 +1,9 @@
 import { Point } from "../utils";
-import { findDerivative, findPoint } from "./utils";
+import { GeneratedPoint, findDerivative, findPoint } from "./utils";
 
 export const catmullRom = (path: Point[]) => {
-  const newPath: Point[] = [];
-  const lastPoint = path[path.length - 2];
+  const newPath: GeneratedPoint[] = [];
+  const lastPoint = new GeneratedPoint(path[path.length - 2].x, path[path.length - 2].y);
   for (let j = 0; j < path.length - 3; j++) {
     const dist = Point.distance(path[j + 1], path[j + 2]);
     const nu = Math.floor(dist / 2.5);
@@ -21,15 +21,11 @@ export const catmullRom = (path: Point[]) => {
       addPoint.speed = sped;
 
       addPoint.index = i;
-      if (i === 0) {
-        addPoint.data = { marker: true };
-      }
       newPath.push(addPoint);
     }
   }
 
   lastPoint.speed = 0;
-  lastPoint.data = { marker: true };
   newPath.push(lastPoint);
 
   return newPath;
