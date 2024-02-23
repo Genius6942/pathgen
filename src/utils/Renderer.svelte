@@ -122,6 +122,9 @@
     // very cursed thing to get it to render on initial load
     setTimeout(() => {
       mouse.x = 0;
+      setTimeout(() => {
+        mouse.x = 0;
+      }, 100);
     });
   });
 
