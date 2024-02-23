@@ -1,0 +1,21 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer components {
+  .button {
+    @apply px-2 py-1 whitespace-nowrap rounded-lg border-white border-2 bg-slate-800 hover:bg-slate-700 cursor-pointer text-white;
+  }
+
+  .menuitem {
+    @apply px-2 py-1 bg-slate-700 hover:bg-slate-600 cursor-pointer text-white;
+  }
+
+  .menuitem:first-child {
+    @apply rounded-t-2xl;
+  }
+
+  .menuitem:last-child {
+    @apply rounded-b-2xl;
+  }
+}
