@@ -15,6 +15,7 @@ export const CONSTANTS = {
   point: {
     color: "#FF9999",
     hover: "#FFCCCC",
+		selected: "#FF0000",
     radius: 1,
     border: {
       color: "white",

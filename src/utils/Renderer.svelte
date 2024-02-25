@@ -121,6 +121,28 @@
       }
     });
 
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Backspace" || e.key === "Delete") {
+        if ($state.selected === -1) {
+          points.update((p) => {
+            p.pop();
+            return p;
+          });
+
+					pushHistory();
+        } else {
+          points.update((p) => {
+            p.splice($state.selected, 1);
+            return p;
+          });
+          $state.selected = -1;
+
+					pushHistory();
+        }
+      } else if (e.key === "Escape") {
+        $state.selected = -1;
+      }
+    });
     // very cursed thing to get it to render on initial load
     setTimeout(() => {
       mouse.x = 0;
@@ -143,4 +165,4 @@
   }
 </script>
 
-<canvas width={size} height={size} bind:this={canvas} />
+<canvas width={size} height={size} bind:this={canvas} class="cursor-none" />

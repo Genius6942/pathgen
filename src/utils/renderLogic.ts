@@ -34,7 +34,7 @@ export const clearCanvas = (ctx: CanvasRenderingContext2D) => {
   ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
 };
 
-export const renderBackground = (ctx: CanvasRenderingContext2D) => {
+export const drawBackground = (ctx: CanvasRenderingContext2D) => {
   const background = backgroundImages[get(config).background];
   ctx.drawImage(background, 0, 0, ctx.canvas.width, ctx.canvas.height);
 };
@@ -68,7 +68,7 @@ export const drawPath = (ctx: CanvasRenderingContext2D) => {
 
 export const drawPoints = (ctx: CanvasRenderingContext2D, mouse: Point) => {
   const scale = ctx.canvas.height / CONSTANTS.scale;
-  get(points).forEach((point) => {
+  get(points).forEach((point, index) => {
     const p = transformPoint(point, ctx.canvas);
     const m = transformPoint(mouse, ctx.canvas);
     ctx.beginPath();
@@ -76,7 +76,9 @@ export const drawPoints = (ctx: CanvasRenderingContext2D, mouse: Point) => {
     ctx.lineWidth = CONSTANTS.point.border.thickness * scale;
     ctx.strokeStyle = CONSTANTS.point.border.color;
     ctx.fillStyle =
-      p.distance(m) <= CONSTANTS.point.radius * scale
+      get(state).selected === index
+        ? CONSTANTS.point.selected
+        : p.distance(m) <= CONSTANTS.point.radius * scale
         ? CONSTANTS.point.hover
         : CONSTANTS.point.color;
 
@@ -88,7 +90,7 @@ export const drawPoints = (ctx: CanvasRenderingContext2D, mouse: Point) => {
 export const drawMouse = (ctx: CanvasRenderingContext2D, mouse: Point) => {
   const m = transformPoint(mouse, ctx.canvas);
   ctx.beginPath();
-  ctx.arc(m.x, m.y, 1, 0, Math.PI * 2);
+  ctx.arc(m.x, m.y, 3, 0, Math.PI * 2);
   ctx.fillStyle = "white";
   ctx.fill();
   ctx.closePath();
@@ -96,7 +98,7 @@ export const drawMouse = (ctx: CanvasRenderingContext2D, mouse: Point) => {
 
 export const render = (ctx: CanvasRenderingContext2D, mouse: Point) => {
   clearCanvas(ctx);
-  renderBackground(ctx);
+  drawBackground(ctx);
   drawBoundaries(ctx);
   drawPath(ctx);
   drawPoints(ctx, mouse);
