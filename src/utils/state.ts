@@ -5,7 +5,7 @@ import {
   type Updater,
   get,
 } from "svelte/store";
-import { FSHandler, Point, type PointExport } from ".";
+import { CONSTANTS, FSHandler, Point, type PointExport } from ".";
 import type { Background } from "./background";
 import { pathAlgorithms, GeneratedPoint, type GeneratedPointExport } from "../gen";
 
@@ -87,12 +87,14 @@ export interface PathConfig {
   method: Method;
   background: Background;
   autosave: boolean;
+  flags: { [key: string]: "number" | "boolean" };
 }
 
 export const config = writable<PathConfig>({
   method: "catmull-rom",
   background: "over-under",
   autosave: false,
+  flags: {},
 });
 
 config.subscribe((v) => {
@@ -135,11 +137,19 @@ const exportData = () => {
   return {
     config: get(config),
     points: get(points).map((point) => point.export()),
+    version: CONSTANTS.version,
   };
 };
 
 const importData = (data: any) => {
-  if (!data.config || !data.points) throw alert("invalid file");
+  if (!data.config || !data.points || !data.version) throw alert("invalid file");
+  if (
+    data.version !== CONSTANTS.version &&
+    !confirm(
+      "This file was created with a different version of the app. Some features may not work as expected. Do you want to continue?"
+    )
+  )
+    return;
   points.update((p) => {
     p.splice(
       0,
@@ -154,7 +164,7 @@ const importData = (data: any) => {
     return p;
   });
 
-	config.set(data.config);
+  config.set(data.config);
 };
 
 export interface HistoryState {
@@ -211,7 +221,9 @@ const fsHandler = new FSHandler();
 export const load = () => {
   fsHandler.open().then((content) => {
     const data = JSON.parse(content);
-    importData(data);
+    try {
+      importData(data);
+    } catch {}
   });
 };
 
@@ -226,9 +238,25 @@ export const saveAs = () => {
 };
 
 points.subscribe(() => {
-	if (get(config).autosave) save();
+  if (get(config).autosave) save();
 });
 
 config.subscribe(() => {
-	if (get(config).autosave) save();
+  if (get(config).autosave) save();
 });
+
+
+export const addFlag = (flag: string, type: "boolean" | "number", overWrite = false) => {
+	if (flag in get(config).flags && !overWrite) throw new Error("Flag already exists");
+	config.update((c) => {
+		c.flags[flag] = type;
+		return c;
+	});
+}
+
+export const removeFlag = (flag: string) => {
+	config.update((c) => {
+		delete c.flags[flag];
+		return c;
+	});
+}

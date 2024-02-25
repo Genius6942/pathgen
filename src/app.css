@@ -19,3 +19,8 @@
     @apply rounded-b-2xl;
   }
 }
+
+option {
+  color: white;
+  background-color: rgb(51 65 85 / var(--tw-bg-opacity));
+}

@@ -26,4 +26,5 @@ export const CONSTANTS = {
     error: "#FF0000",
     thickness: 2,
   },
+	version: '0.1.0'
 };

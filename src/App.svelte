@@ -1,6 +1,18 @@
 <script lang="ts">
   import Renderer from "./utils/Renderer.svelte";
-  import { config, load, save, saveAs, state, undo } from "./utils/state";
+  import {
+    addFlag,
+    config,
+    load,
+    removeFlag,
+    save,
+    saveAs,
+    state,
+    undo,
+  } from "./utils/state";
+
+  let newFlagName = "";
+  let newFlagType: "boolean" | "number" = "boolean";
 </script>
 
 <main>
@@ -10,30 +22,81 @@
         <Renderer />
       </div>
     </div>
-    <!-- delete this div later to expand box for more controls -->
-    <div class="my-auto">
-      <div
-        class="flex gap-3 p-5 w-[500px] border-black dark:border-white border-2 rounded-3xl m-10 flex-col items-stretch"
-      >
-        <div class="border-t-2 mt-auto py-2 border-transparent">
-          <div class="flex gap-3 items-center relative justify-between">
-            <button class="button" on:click={undo}>Undo</button>
-            <div class="h-7 border-r-2 border-white"></div>
-            <div class="flex items-center gap-3">
-              <label class="button"
-                >AutoSav{$config.autosave ? "ing" : "e"}
-                <!-- ™️ -->
-                <input
-                  type="checkbox"
-                  class="hidden"
-                  id="autosave"
-                  bind:checked={$config.autosave}
-                />
-              </label>
-              <button id="import" class="button" on:click={load}>Import</button>
-              <button id="save" class="button" on:click={save}>Save</button>
-              <button id="saveas" class="button" on:click={saveAs}>Save As</button>
-            </div>
+    <div
+      class="flex gap-3 p-5 w-[500px] border-black dark:border-white border-2 rounded-3xl m-10 flex-col items-stretch"
+    >
+      <div class="flex flex-col gap-2">
+        <h1 class="text-3xl">Flags</h1>
+        {#each Array(Object.keys($config.flags).length)
+          .fill(null)
+          .map( (_, i) => ({ key: Object.keys($config.flags)[i], type: $config.flags[Object.keys($config.flags)[i]] }) ) as flag}
+          <div class="flex items-center gap-3">
+            <button class="button py-[2px]" on:click={() => removeFlag(flag.key)}
+              >Delete</button
+            >
+            <div class="h-7 border-white border-r-2" />
+            {flag.key}: {flag.type}
+          </div>
+        {/each}
+
+        <div class="flex gap-2 items-center">
+          New flag: <input
+            type="text"
+            size={Math.max(newFlagName.length, 7)}
+            class="bg-transparent border-2 border-white border-dashed rounded-2xl px-[2px] py-[1px] text-center outline-none focus:border-solid transition-all duration-200 ease-in-out"
+            bind:value={newFlagName}
+            on:keydown={(e) => {
+              if (e.key === "Enter") {
+                if (newFlagName.trim() === "") return;
+
+                try {
+                  addFlag(newFlagName, newFlagType);
+                } catch (e) {
+                  // @ts-expect-error
+                  alert(e.message);
+                }
+                newFlagName = "";
+              }
+            }}
+          />
+          <select bind:value={newFlagType} class="bg-transparent">
+            <option value="boolean">Boolean</option>
+            <option value="number">Number</option>
+          </select>
+          <button
+            class="button"
+            on:click={() => {
+              if (newFlagName.trim() === "") return;
+
+              try {
+                addFlag(newFlagName, newFlagType);
+              } catch (e) {
+                // @ts-expect-error
+                alert(e.message);
+              }
+              newFlagName = "";
+            }}>Create</button
+          >
+        </div>
+      </div>
+      <div class="border-t-2 mt-auto py-2 border-transparent">
+        <div class="flex gap-3 items-center relative justify-between">
+          <button class="button" on:click={undo}>Undo</button>
+          <div class="h-7 border-r-2 border-white"></div>
+          <div class="flex items-center gap-3">
+            <label class="button"
+              >AutoSav{$config.autosave ? "ing" : "e"}
+              <!-- ™️ -->
+              <input
+                type="checkbox"
+                class="hidden"
+                id="autosave"
+                bind:checked={$config.autosave}
+              />
+            </label>
+            <button id="import" class="button" on:click={load}>Import</button>
+            <button id="save" class="button" on:click={save}>Save</button>
+            <button id="saveas" class="button" on:click={saveAs}>Save As</button>
           </div>
         </div>
       </div>
