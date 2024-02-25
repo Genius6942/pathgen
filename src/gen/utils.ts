@@ -45,7 +45,30 @@ export const findPoint = (p0: Point, p1: Point, p2: Point, p3: Point, t: number)
   return new GeneratedPoint(newPoint.x, newPoint.y);
 };
 
+export interface GeneratedPointExport {
+	x: number;
+	y: number;
+	speed: number;
+	index: number;
+}
+
 export class GeneratedPoint extends Point {
 	speed: number = 0;
 	index: number = 0;
+
+	export(): GeneratedPointExport {
+		return {
+			x: this.x,
+			y: this.y,
+			speed: this.speed,
+			index: this.index,
+		}
+	}
+
+	static from(point: GeneratedPointExport) {
+		const p = new GeneratedPoint(point.x, point.y);
+		p.speed = point.speed;
+		p.index = point.index;
+		return p;
+	}
 }

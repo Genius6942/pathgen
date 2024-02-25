@@ -1,9 +1,7 @@
 <script lang="ts">
   import { onMount } from "svelte";
   import { points, config } from "./state";
-  import { CONSTANTS, PathPoint, Point, state } from ".";
-  import { writable } from "svelte/store";
-  import { catmullRom } from "../gen";
+  import { CONSTANTS, PathPoint, Point, clearHistory, pushHistory, state, undo } from ".";
   import { getWindowPoint, render as renderCanvas, transformPoint } from "./renderLogic";
 
   let canvas: HTMLCanvasElement = null as any;
@@ -20,7 +18,11 @@
     dragged: boolean;
   } | null = null;
 
+  let initialized = false;
+
   onMount(() => {
+    if (initialized) return;
+
     const resize = () => {
       const container = canvas.parentElement!;
       size = Math.min(container.clientWidth, container.clientHeight);
@@ -30,8 +32,6 @@
     resize();
 
     renderCanvas(canvas.getContext("2d")!, mouse);
-
-    const undo = () => points.update((p) => p.slice(0, -1));
 
     canvas.addEventListener("mousemove", (e) => {
       const rect = canvas.getBoundingClientRect();
@@ -102,6 +102,8 @@
         p.x += 20;
         const index = dragging.index;
         // showMenu([{ label: "Delete", action: () => $points.splice(index, 1) }], p);
+      } else {
+        pushHistory();
       }
 
       dragging = null;
@@ -124,8 +126,11 @@
       mouse.x = 0;
       setTimeout(() => {
         mouse.x = 0;
+        clearHistory();
       }, 100);
     });
+
+    initialized = true;
   });
 
   $: if (ctx) {

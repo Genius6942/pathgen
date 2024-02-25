@@ -1,3 +1,8 @@
+export interface PointExport {
+	x: number;
+	y: number;
+}
+
 export class Point {
   x: number;
   y: number;
@@ -117,10 +122,14 @@ export class Point {
     }
   }
 
-  export() {
+  export(): PointExport {
     return {
       x: this.x,
       y: this.y,
     };
   }
+
+	static from(point: PointExport) {
+		return new Point(point.x, point.y);
+	}
 }

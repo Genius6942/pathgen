@@ -1,7 +1,52 @@
-import { writable, get } from "svelte/store";
-import { Point } from ".";
+import {
+  writable,
+  type Writable,
+  type Unsubscriber,
+  type Updater,
+  get,
+} from "svelte/store";
+import { FSHandler, Point, type PointExport } from ".";
 import type { Background } from "./background";
-import { pathAlgorithms, type GeneratedPoint } from "../gen";
+import { pathAlgorithms, GeneratedPoint, type GeneratedPointExport } from "../gen";
+
+export function customWritable<T>(initialValue: T): Writable<T> & {
+  silentSet: (value: T) => void;
+  silentUpdate: (updater: Updater<T>) => void;
+} {
+  let silent = false;
+  const store = writable(initialValue);
+  return {
+    subscribe(run: (value: T) => void, invalidate?: () => void): Unsubscriber {
+      return store.subscribe((value: T) => {
+        if (!silent) {
+          run(value);
+        }
+      }, invalidate);
+    },
+    set(value: T): void {
+      silent = false;
+      store.set(value);
+    },
+    silentSet(value: T): void {
+      silent = true;
+      store.set(value);
+    },
+    update(callback: Updater<T>): void {
+      silent = false;
+      store.update(callback);
+    },
+    silentUpdate(callback: Updater<T>): void {
+      silent = true;
+      store.update(callback);
+    },
+  };
+}
+
+export interface PathPointExport {
+  x: number;
+  y: number;
+  flags: { [key: string]: number | boolean };
+}
 
 export class PathPoint extends Point {
   flags: { [key: string]: number | boolean };
@@ -16,29 +61,63 @@ export class PathPoint extends Point {
 
     this.flags = options.flags || {};
   }
+
+  clone() {
+    return new PathPoint(this.x, this.y, { flags: this.flags });
+  }
+
+  export(): PathPointExport {
+    return {
+      x: this.x,
+      y: this.y,
+      flags: JSON.parse(JSON.stringify(this.flags)),
+    };
+  }
+
+  static from(point: PathPointExport) {
+    return new PathPoint(point.x, point.y, { flags: point.flags });
+  }
 }
 
 export const points = writable<PathPoint[]>([]);
 
 type Method = "catmull-rom";
 
-export const config = writable({
-  method: "catmull-rom" as Method,
-  background: "over-under" as Background,
+export interface PathConfig {
+  method: Method;
+  background: Background;
+  autosave: boolean;
+}
+
+export const config = writable<PathConfig>({
+  method: "catmull-rom",
+  background: "over-under",
   autosave: false,
 });
 
-export const state = writable({
+config.subscribe((v) => {
+  if (v.autosave && !fsHandler.active) {
+    alert("Please save the file before enabling autosave");
+    config.update((v) => ({ ...v, autosave: false }));
+  }
+});
+
+export interface AppState {
+  selected: number;
+  generatedPoints: GeneratedPoint[];
+  fileHandle: FileSystemFileHandle | null;
+}
+export const state = writable<AppState>({
   selected: -1,
-  generatedPoints: [] as GeneratedPoint[],
-  fileHandle: null as FileSystemFileHandle | null,
+  generatedPoints: [],
+  fileHandle: null,
 });
 
 points.subscribe((p) => {
   if (p.length < 2) return state.update((s) => ({ ...s, generatedPoints: [] }));
   const method = get(config).method;
   const algorithm = pathAlgorithms[method];
-  const waypoints = p.map((point) => point.clone());
+  const waypoints: Point[] = p.map((point) => point.clone());
   const first = waypoints[0];
   const second = waypoints[1];
   const last = waypoints[waypoints.length - 1];
@@ -52,24 +131,20 @@ points.subscribe((p) => {
   });
 });
 
-export const exportPoints = () => {
+const exportData = () => {
   return {
-    flags: {
-      "front-wings": "boolean",
-      "back-wings": "boolean",
-      intake: "number",
-    },
+    config: get(config),
     points: get(points).map((point) => point.export()),
   };
 };
 
-export const importPoints = (data: any) => {
-  if (!data.flags || !data.points) throw alert("invalid file");
+const importData = (data: any) => {
+  if (!data.config || !data.points) throw alert("invalid file");
   points.update((p) => {
     p.splice(
       0,
       p.length,
-      ...data.p.map(
+      ...data.points.map(
         (point: any) =>
           new PathPoint(point.x, point.y, {
             flags: point.flags,
@@ -78,4 +153,82 @@ export const importPoints = (data: any) => {
     );
     return p;
   });
+
+	config.set(data.config);
 };
+
+export interface HistoryState {
+  points: PathPointExport[];
+  state: Omit<AppState, "generatedPoints"> & { generatedPoints: GeneratedPointExport[] };
+  config: PathConfig;
+}
+
+export const history = writable<HistoryState[]>([]);
+
+export const undo = () => {
+  history.update((h) => {
+    const last = h.pop();
+    if (last) {
+      points.set(last.points.map((point) => PathPoint.from(point)));
+      state.set({
+        ...last.state,
+        generatedPoints: last.state.generatedPoints.map((point) =>
+          GeneratedPoint.from(point)
+        ),
+      });
+      config.set(last.config);
+    }
+    return h;
+  });
+};
+
+export const clearHistory = () => {
+  history.set([]);
+};
+
+export const pushHistory = () => {
+  const p = get(points);
+  const s = get(state);
+  const c = get(config);
+
+  history.update((h) => {
+    h.push({
+      points: p.map((point) => point.export()),
+      state: {
+        ...JSON.parse(JSON.stringify(s)),
+        generatedPoints: s.generatedPoints.map((point) => point.export()),
+      },
+      config: JSON.parse(JSON.stringify(c)),
+    });
+    return h;
+  });
+};
+
+if (get(history).length === 0) pushHistory();
+
+const fsHandler = new FSHandler();
+
+export const load = () => {
+  fsHandler.open().then((content) => {
+    const data = JSON.parse(content);
+    importData(data);
+  });
+};
+
+export const save = () => {
+  const data = exportData();
+  fsHandler.write(JSON.stringify(data));
+};
+
+export const saveAs = () => {
+  const data = exportData();
+  fsHandler.write(JSON.stringify(data), true);
+};
+
+points.subscribe(() => {
+	if (get(config).autosave) save();
+});
+
+config.subscribe(() => {
+	if (get(config).autosave) save();
+});

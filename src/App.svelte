@@ -1,39 +1,40 @@
 <script lang="ts">
   import Renderer from "./utils/Renderer.svelte";
-  import { config, state } from "./utils/state";
-
-  config.subscribe((v) => {
-    if (v.autosave && !$state.fileHandle) {
-      alert("Please save the file before enabling autosave");
-      config.update((v) => ({ ...v, autosave: false }));
-    }
-  });
+  import { config, load, save, saveAs, state, undo } from "./utils/state";
 </script>
 
 <main>
   <div class="h-screen flex justify-center">
-    <div class="relative flex-grow p-4">
+    <div class="relative flex-grow p-4 items-center">
       <div class="h-full flex justify-center items-center">
         <Renderer />
       </div>
     </div>
-    <div
-      class="flex gap-3 p-5 w-[500px] border-black dark:border-white border-2 rounded-3xl m-10 flex-col items-stretch"
-    >
-      <div class="border-t-2 mt-auto py-2 border-white">
-        <div class="flex gap-3 items-center">
-          <div class="flex border-2 px-2 rounded-full border-transparent items-center">
-            AutoSave™️
-            <input
-              type="checkbox"
-              class="ml-1"
-              id="autosave"
-              bind:checked={$config.autosave}
-            />
+    <!-- delete this div later to expand box for more controls -->
+    <div class="my-auto">
+      <div
+        class="flex gap-3 p-5 w-[500px] border-black dark:border-white border-2 rounded-3xl m-10 flex-col items-stretch"
+      >
+        <div class="border-t-2 mt-auto py-2 border-transparent">
+          <div class="flex gap-3 items-center relative justify-between">
+            <button class="button" on:click={undo}>Undo</button>
+            <div class="h-7 border-r-2 border-white"></div>
+            <div class="flex items-center gap-3">
+              <label class="button"
+                >AutoSav{$config.autosave ? "ing" : "e"}
+                <!-- ™️ -->
+                <input
+                  type="checkbox"
+                  class="hidden"
+                  id="autosave"
+                  bind:checked={$config.autosave}
+                />
+              </label>
+              <button id="import" class="button" on:click={load}>Import</button>
+              <button id="save" class="button" on:click={save}>Save</button>
+              <button id="saveas" class="button" on:click={saveAs}>Save As</button>
+            </div>
           </div>
-          <button id="import" class="button">Import</button>
-          <button id="save" class="button">Save</button>
-          <button id="saveas" class="button">Save As</button>
         </div>
       </div>
     </div>

@@ -1,7 +1,7 @@
 export class FSHandler {
   private handle: null | FileSystemFileHandle = null;
 
-  static extension = "pp";
+  static extension = "vpp";
 
   constructor() {}
 
@@ -9,7 +9,7 @@ export class FSHandler {
     [this.handle] = await window.showOpenFilePicker({
       types: [
         {
-          description: "vpp",
+          description: "Vex Pure Pursuit",
           accept: {
             "*/*": [`.${FSHandler.extension}`],
           },
@@ -28,10 +28,10 @@ export class FSHandler {
   async write(content: string, newFile?: boolean) {
     if (this.handle === null || newFile) {
       this.handle = await window.showSaveFilePicker({
-				suggestedName: "path.pp",
+        suggestedName: "path.vpp",
         types: [
           {
-            description: "vpp",
+            description: "Vex Pure Pursuit",
             accept: {
               "*/*": [`.${FSHandler.extension}`],
             },
@@ -41,7 +41,11 @@ export class FSHandler {
     }
 
     const writeHandle = await this.handle.createWritable();
-		await writeHandle.write(content);
-		await writeHandle.close();
+    await writeHandle.write(content);
+    await writeHandle.close();
+  }
+
+  get active() {
+    return this.handle !== null;
   }
 }
