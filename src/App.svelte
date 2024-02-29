@@ -16,6 +16,8 @@
   let newFlagType: "boolean" | "number" = "boolean";
 
   $: point = $state.selected === -1 ? null : $points[$state.selected];
+
+	const typeIgnore = (...args: any[]) => args as any;
 </script>
 
 <main>
@@ -86,6 +88,30 @@
       {:else}
         <div class="flex flex-col gap-2">
           <h1 class="text-3xl">Point at ({point.x.toFixed(2)}, {point.y.toFixed(2)})</h1>
+
+					{#each Array(Object.keys($config.flags).length)
+            .fill(null)
+            .map( (_, i) => ({ key: Object.keys($config.flags)[i], type: $config.flags[Object.keys($config.flags)[i]] }) ) as flag}
+            {#if flag.type === "boolean"}
+							<div class="flex items-center gap-3">
+								<input
+									type="checkbox"
+									id={flag.key}
+								/>
+								<label for={flag.key}>{flag.key}</label>
+							</div>
+						{:else}
+							<div class="flex items-center gap-3">
+								<label for={flag.key}>{flag.key}</label>
+								<input
+									type="number"
+									id={flag.key}
+									class="bg-transparent border-2 border-white border-dashed rounded-2xl px-[2px] py-[1px] text-center outline-none focus:border-solid transition-all duration-200 ease-in-out"
+									bind:value={point.flags[flag.key]}
+								/>
+							</div>
+						{/if}
+          {/each}
         </div>
       {/if}
       <div class="border-t-2 mt-auto py-2 border-transparent">
