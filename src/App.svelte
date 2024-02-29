@@ -35,8 +35,9 @@
             .fill(null)
             .map( (_, i) => ({ key: Object.keys($config.flags)[i], type: $config.flags[Object.keys($config.flags)[i]] }) ) as flag}
             <div class="flex items-center gap-3">
-              <button class="button py-[2px]" on:click={() => removeFlag(flag.key)}
-                >Delete</button
+              <button
+                class="button py-[2px]"
+                on:click={() => removeFlag(flag.key)}>Delete</button
               >
               <div class="h-7 border-white border-r-2" />
               {flag.key}: {flag.type}
@@ -92,13 +93,32 @@
             Point at ({point.x.toFixed(2)}, {point.y.toFixed(2)})
           </h1>
 
-          {#each Array(Object.keys($config.flags).length)
-            .fill(null)
-            .map( (_, i) => ({ key: Object.keys($config.flags)[i], type: $config.flags[Object.keys($config.flags)[i]] }) ) as flag}
+          {#if Object.keys($config.flags).length === 0}
+            (No flags set)
+          {/if}
+          {#each Object.keys($config.flags).map( (_, i) => ({ key: Object.keys($config.flags)[i], type: $config.flags[Object.keys($config.flags)[i]] }) ) as flag}
             {#if flag.type === "boolean"}
               <div class="flex items-center gap-3">
-                <input type="checkbox" id={flag.key} />
-                <label for={flag.key}>{flag.key}</label>
+                <label class="inline-flex items-center cursor-pointer">
+                  <input
+                    type="checkbox"
+                    value=""
+                    class="sr-only peer"
+                    bind:checked={
+                      // @ts-ignore
+                      point.flagsAny[flag.key]
+                    }
+                  />
+
+                  <div
+                    class="relative w-10 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-[110%] after:content-[''] after:absolute after:top-[4px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600"
+                  ></div>
+                  <span
+                    class="ms-3 text-sm font-medium text-gray-900 dark:text-gray-300"
+                  >
+                    {flag.key}
+                  </span>
+                </label>
               </div>
             {:else}
               <div class="flex items-center gap-3">
@@ -120,7 +140,7 @@
           <div class="h-7 border-r-2 border-white"></div>
           <div class="flex items-center gap-3">
             <label class="button">
-							AutoSav{$config.autosave ? "ing" : "e"}
+              AutoSav{$config.autosave ? "ing" : "e"}
               <!-- ™️ -->
               <input
                 type="checkbox"
@@ -131,7 +151,8 @@
             </label>
             <button id="import" class="button" on:click={load}>Import</button>
             <button id="save" class="button" on:click={save}>Save</button>
-            <button id="saveas" class="button" on:click={saveAs}>Save As</button>
+            <button id="saveas" class="button" on:click={saveAs}>Save As</button
+            >
           </div>
         </div>
       </div>

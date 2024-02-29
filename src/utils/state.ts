@@ -7,7 +7,11 @@ import {
 } from "svelte/store";
 import { CONSTANTS, FSHandler, Point, type PointExport } from ".";
 import type { Background } from "./background";
-import { pathAlgorithms, GeneratedPoint, type GeneratedPointExport } from "../gen";
+import {
+  pathAlgorithms,
+  GeneratedPoint,
+  type GeneratedPointExport,
+} from "../gen";
 
 export function customWritable<T>(initialValue: T): Writable<T> & {
   silentSet: (value: T) => void;
@@ -60,6 +64,14 @@ export class PathPoint extends Point {
     super(x, y);
 
     this.flags = options.flags || {};
+  }
+
+  get flagsAny() {
+    return this.flags as { [key: string]: any };
+  }
+
+  set flagsAny(val: any) {
+    this.flags = val;
   }
 
   clone() {
@@ -142,7 +154,8 @@ const exportData = () => {
 };
 
 const importData = (data: any) => {
-  if (!data.config || !data.points || !data.version) throw alert("invalid file");
+  if (!data.config || !data.points || !data.version)
+    throw alert("invalid file");
   if (
     data.version !== CONSTANTS.version &&
     !confirm(
@@ -169,7 +182,9 @@ const importData = (data: any) => {
 
 export interface HistoryState {
   points: PathPointExport[];
-  state: Omit<AppState, "generatedPoints"> & { generatedPoints: GeneratedPointExport[] };
+  state: Omit<AppState, "generatedPoints"> & {
+    generatedPoints: GeneratedPointExport[];
+  };
   config: PathConfig;
 }
 
@@ -245,18 +260,22 @@ config.subscribe(() => {
   if (get(config).autosave) save();
 });
 
-
-export const addFlag = (flag: string, type: "boolean" | "number", overWrite = false) => {
-	if (flag in get(config).flags && !overWrite) throw new Error("Flag already exists");
-	config.update((c) => {
-		c.flags[flag] = type;
-		return c;
-	});
-}
+export const addFlag = (
+  flag: string,
+  type: "boolean" | "number",
+  overWrite = false
+) => {
+  if (flag in get(config).flags && !overWrite)
+    throw new Error("Flag already exists");
+  config.update((c) => {
+    c.flags[flag] = type;
+    return c;
+  });
+};
 
 export const removeFlag = (flag: string) => {
-	config.update((c) => {
-		delete c.flags[flag];
-		return c;
-	});
-}
+  config.update((c) => {
+    delete c.flags[flag];
+    return c;
+  });
+};

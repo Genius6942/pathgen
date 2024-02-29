@@ -1,8 +1,20 @@
 <script lang="ts">
   import { onMount } from "svelte";
   import { points, config } from "./state";
-  import { CONSTANTS, PathPoint, Point, clearHistory, pushHistory, state, undo } from ".";
-  import { getWindowPoint, render as renderCanvas, transformPoint } from "./renderLogic";
+  import {
+    CONSTANTS,
+    PathPoint,
+    Point,
+    clearHistory,
+    pushHistory,
+    state,
+    undo,
+  } from ".";
+  import {
+    getWindowPoint,
+    render as renderCanvas,
+    transformPoint,
+  } from "./renderLogic";
 
   let canvas: HTMLCanvasElement = null as any;
 
@@ -18,39 +30,55 @@
     dragged: boolean;
   } | null = null;
 
-  let initialized = false;
-
   onMount(() => {
-    if (initialized) return;
+    const removableListeners: [EventTarget, string, Function][] = [];
+    const bindRemovable = <
+      T extends EventTarget,
+      K extends keyof HTMLElementEventMap,
+    >(
+      item: T,
+      event: K,
+      listener: (this: T, ev: HTMLElementEventMap[K]) => any,
+      options?: boolean | AddEventListenerOptions
+    ) => {
+      // @ts-ignore
+      item.addEventListener(event, listener, options);
+
+      // Return a function to remove the event listener
+      removableListeners.push([item, event, listener]);
+    };
 
     const resize = () => {
       const container = canvas.parentElement!;
       size = Math.min(container.clientWidth, container.clientHeight);
     };
 
-    window.addEventListener("resize", resize);
+    bindRemovable(window, "resize", resize);
     resize();
 
     renderCanvas(canvas.getContext("2d")!, mouse);
 
-    canvas.addEventListener("mousemove", (e) => {
+    bindRemovable(canvas, "mousemove", (e) => {
       const rect = canvas.getBoundingClientRect();
       const x = e.clientX - rect.left;
       const y = e.clientY - rect.top;
 
       mouse.x = ((x - canvas.width / 2) / (canvas.width / 2)) * CONSTANTS.scale;
-      mouse.y = (-(y - canvas.height / 2) / (canvas.height / 2)) * CONSTANTS.scale;
+      mouse.y =
+        (-(y - canvas.height / 2) / (canvas.height / 2)) * CONSTANTS.scale;
     });
-    canvas.addEventListener("mousedown", (e) => {
+
+    bindRemovable(canvas, "mousedown", (e) => {
       const rect = canvas.getBoundingClientRect();
       const x = e.clientX - rect.left;
       const y = e.clientY - rect.top;
 
       mouse.x = ((x - canvas.width / 2) / (canvas.width / 2)) * CONSTANTS.scale;
-      mouse.y = (-(y - canvas.height / 2) / (canvas.height / 2)) * CONSTANTS.scale;
+      mouse.y =
+        (-(y - canvas.height / 2) / (canvas.height / 2)) * CONSTANTS.scale;
     });
 
-    const keydown = (e: KeyboardEvent) => {
+    bindRemovable(document, "keydown", (e) => {
       let found = true;
       switch (e.key.toLowerCase()) {
         case "z":
@@ -62,13 +90,10 @@
       }
 
       if (found) e.preventDefault();
-    };
+    });
 
-    document.querySelector("#undo")?.addEventListener("click", undo);
 
-    window.addEventListener("keydown", keydown);
-
-    canvas.addEventListener("mousedown", () => {
+    bindRemovable(canvas, "mousedown", () => {
       const m = transformPoint(mouse, canvas);
       $state.selected = $points.findIndex(
         (point) =>
@@ -95,7 +120,7 @@
       }
     });
 
-    document.addEventListener("mouseup", (e) => {
+    bindRemovable(document, "mouseup", (e) => {
       if (dragging && !dragging.dragged) {
         e.stopImmediatePropagation();
         const p = getWindowPoint($points[dragging.index], canvas);
@@ -109,27 +134,36 @@
       dragging = null;
     });
 
-    document.addEventListener("mousemove", () => {
+    bindRemovable(document, "mousemove", () => {
       if (dragging) {
         dragging.dragged = true;
         points.update((p) => {
           p[dragging?.index!].set(
-            new Point(mouse.x - dragging?.offset.x!, mouse.y - dragging?.offset.y!)
+            new Point(
+              mouse.x - dragging?.offset.x!,
+              mouse.y - dragging?.offset.y!
+            )
           );
           return p;
         });
       }
     });
 
-    document.addEventListener("keydown", (e) => {
+    bindRemovable(document, "keydown", (e) => {
+      if (
+        (e.target as HTMLElement).tagName.toLowerCase() === "input" ||
+        (e.target as HTMLElement).tagName.toLowerCase() === "textarea"
+      )
+        return;
       if (e.key === "Backspace" || e.key === "Delete") {
         if ($state.selected === -1) {
           points.update((p) => {
+            console.log(p);
             p.pop();
             return p;
           });
 
-					pushHistory();
+          pushHistory();
         } else {
           points.update((p) => {
             p.splice($state.selected, 1);
@@ -137,7 +171,7 @@
           });
           $state.selected = -1;
 
-					pushHistory();
+          pushHistory();
         }
       } else if (e.key === "Escape") {
         $state.selected = -1;
@@ -152,7 +186,11 @@
       }, 100);
     });
 
-    initialized = true;
+    return () => {
+      removableListeners.forEach((removable) =>
+        removable[0].removeEventListener(removable[1], removable[2] as any)
+      );
+    };
   });
 
   $: if (ctx) {
