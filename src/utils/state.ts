@@ -5,7 +5,14 @@ import {
   type Updater,
   get,
 } from "svelte/store";
-import { CONSTANTS, FSHandler, PathPoint, Point, type PathPointExport, type PointExport } from ".";
+import {
+  CONSTANTS,
+  FSHandler,
+  PathPoint,
+  Point,
+  type PathPointExport,
+  type PointExport,
+} from ".";
 import type { Background } from "./background";
 import {
   pathAlgorithms,
@@ -47,10 +54,7 @@ export function customWritable<T>(initialValue: T): Writable<T> & {
   };
 }
 
-
-
 export const points = writable<PathPoint[]>([]);
-
 
 export interface PathConfig {
   algorithm: PathAlgorithm;
@@ -105,8 +109,7 @@ const exportData = () => {
 };
 
 const importData = (data: any) => {
-  if (!data.config || !data.points || !data.version)
-    throw alert("invalid file");
+  if (!data.config || !data.points || !data.version) throw alert("invalid file");
   if (
     data.version !== CONSTANTS.version &&
     !confirm(
@@ -140,10 +143,13 @@ export interface HistoryState {
 }
 
 export const history = writable<HistoryState[]>([]);
+const initialState = writable<HistoryState>();
 
-export const undo = () => {
+export const undo = (extra = 0) => {
   history.update((h) => {
-    const last = h.pop();
+    h.pop();
+    for (let i = 0; i < extra; i++) h.pop();
+    const last = h[h.length - 1];
     if (last) {
       points.set(last.points.map((point) => PathPoint.from(point)));
       state.set({
@@ -153,6 +159,8 @@ export const undo = () => {
         ),
       });
       config.set(last.config);
+    } else {
+      history.set([get(initialState)]);
     }
     return h;
   });
@@ -162,10 +170,21 @@ export const clearHistory = () => {
   history.set([]);
 };
 
-export const pushHistory = () => {
+export const pushHistory = (isInitial = false) => {
   const p = get(points);
   const s = get(state);
   const c = get(config);
+
+  if (isInitial) {
+    initialState.set({
+      points: p.map((point) => point.export()),
+      state: {
+        ...JSON.parse(JSON.stringify(s)),
+        generatedPoints: s.generatedPoints.map((point) => point.export()),
+      },
+      config: JSON.parse(JSON.stringify(c)),
+    });
+  }
 
   history.update((h) => {
     h.push({
@@ -180,7 +199,7 @@ export const pushHistory = () => {
   });
 };
 
-if (get(history).length === 0) pushHistory();
+if (get(history).length === 0) pushHistory(true);
 
 const fsHandler = new FSHandler();
 
@@ -211,13 +230,8 @@ config.subscribe(() => {
   if (get(config).autosave) save();
 });
 
-export const addFlag = (
-  flag: string,
-  type: "boolean" | "number",
-  overWrite = false
-) => {
-  if (flag in get(config).flags && !overWrite)
-    throw new Error("Flag already exists");
+export const addFlag = (flag: string, type: "boolean" | "number", overWrite = false) => {
+  if (flag in get(config).flags && !overWrite) throw new Error("Flag already exists");
   config.update((c) => {
     c.flags[flag] = type;
     return c;

@@ -51,6 +51,8 @@ export const drawBoundaries = (ctx: CanvasRenderingContext2D) => {
 };
 
 export const drawPath = (ctx: CanvasRenderingContext2D) => {
+  const scale = ctx.canvas.height / CONSTANTS.scale;
+
   const path = get(state).generatedPoints.map((point) =>
     transformPoint(point, ctx.canvas)
   );
@@ -61,7 +63,7 @@ export const drawPath = (ctx: CanvasRenderingContext2D) => {
     ctx.moveTo(path[i].x, path[i].y);
     ctx.lineTo(path[i + 1].x, path[i + 1].y);
     ctx.strokeStyle = false ? CONSTANTS.path.error : CONSTANTS.path.color;
-    ctx.lineWidth = CONSTANTS.path.thickness;
+    ctx.lineWidth = CONSTANTS.path.thickness * scale;
     ctx.stroke();
   }
 };
@@ -88,9 +90,11 @@ export const drawPoints = (ctx: CanvasRenderingContext2D, mouse: Point) => {
 };
 
 export const drawMouse = (ctx: CanvasRenderingContext2D, mouse: Point) => {
+  const scale = ctx.canvas.height / CONSTANTS.scale;
+
   const m = transformPoint(mouse, ctx.canvas);
   ctx.beginPath();
-  ctx.arc(m.x, m.y, 3, 0, Math.PI * 2);
+  ctx.arc(m.x, m.y, 0.4 * scale, 0, Math.PI * 2);
   ctx.fillStyle = "white";
   ctx.fill();
   ctx.closePath();

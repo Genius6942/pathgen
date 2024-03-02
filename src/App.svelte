@@ -31,16 +31,14 @@
       {#if !point}
         <div class="flex flex-col gap-2">
           <h1 class="text-3xl">Path config</h1>
-          
-          
+
           <h1 class="text-3xl">Flags</h1>
           {#each Array(Object.keys($config.flags).length)
             .fill(null)
             .map( (_, i) => ({ key: Object.keys($config.flags)[i], type: $config.flags[Object.keys($config.flags)[i]] }) ) as flag}
             <div class="flex items-center gap-3">
-              <button
-                class="button py-[2px]"
-                on:click={() => removeFlag(flag.key)}>Delete</button
+              <button class="button py-[2px]" on:click={() => removeFlag(flag.key)}
+                >Delete</button
               >
               <div class="h-7 border-white border-r-2" />
               {flag.key}: {flag.type}
@@ -107,18 +105,14 @@
                     type="checkbox"
                     value=""
                     class="sr-only peer"
-                    bind:checked={
-                      // @ts-ignore
-                      point.flagsAny[flag.key]
-                    }
+                    bind:checked={// @ts-ignore
+                    point.flagsAny[flag.key]}
                   />
 
                   <div
                     class="relative w-10 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-[110%] after:content-[''] after:absolute after:top-[4px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600"
                   ></div>
-                  <span
-                    class="ms-3 text-sm font-medium text-gray-900 dark:text-gray-300"
-                  >
+                  <span class="ms-3 text-sm font-medium text-gray-900 dark:text-gray-300">
                     {flag.key}
                   </span>
                 </label>
@@ -139,7 +133,7 @@
       {/if}
       <div class="border-t-2 mt-auto py-2 border-transparent">
         <div class="flex gap-3 items-center relative justify-between">
-          <button class="button" on:click={undo}>Undo</button>
+          <button class="button" on:click={() => undo(1)}>Undo</button>
           <div class="h-7 border-r-2 border-white"></div>
           <div class="flex items-center gap-3">
             <label class="button">
@@ -154,8 +148,7 @@
             </label>
             <button id="import" class="button" on:click={load}>Import</button>
             <button id="save" class="button" on:click={save}>Save</button>
-            <button id="saveas" class="button" on:click={saveAs}>Save As</button
-            >
+            <button id="saveas" class="button" on:click={saveAs}>Save As</button>
           </div>
         </div>
       </div>

@@ -158,7 +158,6 @@
       if (e.key === "Backspace" || e.key === "Delete") {
         if ($state.selected === -1) {
           points.update((p) => {
-            console.log(p);
             p.pop();
             return p;
           });
