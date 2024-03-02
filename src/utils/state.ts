@@ -100,6 +100,19 @@ points.subscribe((p) => {
   });
 });
 
+config.subscribe(() =>{
+	const p = get(points);
+  if (p.length < 2) return state.update((s) => ({ ...s, generatedPoints: [] }));
+  const method = get(config).algorithm;
+  const algorithm = pathAlgorithms[method];
+  const waypoints: PathPoint[] = p.map((point) => point.clone());
+
+  state.update((s) => {
+    s.generatedPoints = algorithm(waypoints);
+    return s;
+  });
+});
+
 const exportData = () => {
   return {
     config: get(config),

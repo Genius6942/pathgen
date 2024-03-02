@@ -11,6 +11,7 @@
     state,
     undo,
   } from "./utils/state";
+  import { pathAlgorithms } from "./gen";
 
   let newFlagName = "";
   let newFlagType: "boolean" | "number" = "boolean";
@@ -31,7 +32,34 @@
       {#if !point}
         <div class="flex flex-col gap-2">
           <h1 class="text-3xl">Path config</h1>
+          <div>
+            <select
+              on:change={(e) =>{
+								// @ts-ignore
+								const newValue = e.target.value;
 
+								if (!confirm("Are you sure you want to change the algorithm? This will wipe all points (methods are incompatible)")) {
+									// @ts-ignore
+									e.target.value = $config.algorithm;
+									return;
+								}
+
+								$points = [];
+
+								$config.algorithm = newValue;
+							}}
+              class="bg-transparent text-lg border-white border rounded-full p-1"
+            >
+              {#each Object.keys(pathAlgorithms) as algorithm}
+                <option value={algorithm}>
+                  {algorithm
+                    .split("-")
+                    .map((item) => item[0].toUpperCase() + item.slice(1))
+                    .join(" ")}
+                </option>
+              {/each}
+            </select>
+          </div>
           <h1 class="text-3xl">Flags</h1>
           {#each Array(Object.keys($config.flags).length)
             .fill(null)
