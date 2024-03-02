@@ -4,7 +4,7 @@
 
 @layer components {
   .button {
-    @apply px-2 py-1 whitespace-nowrap rounded-lg border-white border-2 bg-slate-800 hover:bg-slate-700 cursor-pointer text-white;
+    @apply px-2 py-1 whitespace-nowrap rounded-lg border-white border-2 bg-slate-800 hover:bg-slate-700 cursor-pointer text-white flex items-center justify-center;
   }
 
   .menuitem {

@@ -30,6 +30,9 @@
     >
       {#if !point}
         <div class="flex flex-col gap-2">
+          <h1 class="text-3xl">Path config</h1>
+          
+          
           <h1 class="text-3xl">Flags</h1>
           {#each Array(Object.keys($config.flags).length)
             .fill(null)

@@ -5,12 +5,13 @@ import {
   type Updater,
   get,
 } from "svelte/store";
-import { CONSTANTS, FSHandler, Point, type PointExport } from ".";
+import { CONSTANTS, FSHandler, PathPoint, Point, type PathPointExport, type PointExport } from ".";
 import type { Background } from "./background";
 import {
   pathAlgorithms,
   GeneratedPoint,
   type GeneratedPointExport,
+  type PathAlgorithm,
 } from "../gen";
 
 export function customWritable<T>(initialValue: T): Writable<T> & {
@@ -46,64 +47,20 @@ export function customWritable<T>(initialValue: T): Writable<T> & {
   };
 }
 
-export interface PathPointExport {
-  x: number;
-  y: number;
-  flags: { [key: string]: number | boolean };
-}
 
-export class PathPoint extends Point {
-  flags: { [key: string]: number | boolean };
-  constructor(
-    x: number,
-    y: number,
-    options: {
-      flags: { [key: string]: boolean | number };
-    }
-  ) {
-    super(x, y);
-
-    this.flags = options.flags || {};
-  }
-
-  get flagsAny() {
-    return this.flags as { [key: string]: any };
-  }
-
-  set flagsAny(val: any) {
-    this.flags = val;
-  }
-
-  clone() {
-    return new PathPoint(this.x, this.y, { flags: this.flags });
-  }
-
-  export(): PathPointExport {
-    return {
-      x: this.x,
-      y: this.y,
-      flags: JSON.parse(JSON.stringify(this.flags)),
-    };
-  }
-
-  static from(point: PathPointExport) {
-    return new PathPoint(point.x, point.y, { flags: point.flags });
-  }
-}
 
 export const points = writable<PathPoint[]>([]);
 
-type Method = "catmull-rom";
 
 export interface PathConfig {
-  method: Method;
+  algorithm: PathAlgorithm;
   background: Background;
   autosave: boolean;
   flags: { [key: string]: "number" | "boolean" };
 }
 
 export const config = writable<PathConfig>({
-  method: "catmull-rom",
+  algorithm: "catmull-rom",
   background: "over-under",
   autosave: false,
   flags: {},
@@ -129,15 +86,9 @@ export const state = writable<AppState>({
 
 points.subscribe((p) => {
   if (p.length < 2) return state.update((s) => ({ ...s, generatedPoints: [] }));
-  const method = get(config).method;
+  const method = get(config).algorithm;
   const algorithm = pathAlgorithms[method];
-  const waypoints: Point[] = p.map((point) => point.clone());
-  const first = waypoints[0];
-  const second = waypoints[1];
-  const last = waypoints[waypoints.length - 1];
-  const firstGhostPoint = first.multiply(2).subtract(second);
-  waypoints.unshift(firstGhostPoint);
-  waypoints.push(last);
+  const waypoints: PathPoint[] = p.map((point) => point.clone());
 
   state.update((s) => {
     s.generatedPoints = algorithm(waypoints);

@@ -2,6 +2,7 @@ import { Point } from "./point";
 
 export * from "./intersection";
 export * from "./point";
+export * from "./pathPoint";
 export * from "./state";
 export * from "./fsHandler";
 
@@ -15,7 +16,7 @@ export const CONSTANTS = {
   point: {
     color: "#FF9999",
     hover: "#FFCCCC",
-		selected: "#FF0000",
+    selected: "#FF0000",
     radius: 1,
     border: {
       color: "white",
@@ -27,5 +28,5 @@ export const CONSTANTS = {
     error: "#FF0000",
     thickness: 2,
   },
-	version: '0.1.0'
+  version: "0.1.0",
 };

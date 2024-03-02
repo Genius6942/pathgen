@@ -1,6 +1,6 @@
 export interface PointExport {
-	x: number;
-	y: number;
+  x: number;
+  y: number;
 }
 
 export class Point {
@@ -19,7 +19,7 @@ export class Point {
   }
 
   add(p: Point) {
-    return Point.add(this, p);
+    return this.clone().set(Point.add(this, p)) as this;
   }
 
   static sum(...points: Point[]) {
@@ -36,17 +36,17 @@ export class Point {
   }
 
   subtract(p: Point) {
-    return Point.subtract(this, p);
+    return this.clone().set(Point.subtract(this, p)) as this;
   }
 
   // d * (x, y) = (dx, dy)
-  multiply(d: number) {
-    return new Point(this.x * d, this.y * d);
+  multiply(d: number): this {
+    return this.clone().set({ x: this.x * d, y: this.y * d }) as this;
   }
 
   // d * (x, y) = (x/d, y/d)
   divide(d: number) {
-    return new Point(this.x / d, this.y / d);
+    return this.clone().set({ x: this.x / d, y: this.y / d });
   }
 
   static equals(p1: Point, p2: Point) {
@@ -61,7 +61,7 @@ export class Point {
     return Math.sqrt(Math.pow(p1.x - p2.x, 2) + Math.pow(p1.y - p2.y, 2));
   }
 
-  distance(p: Point) {
+  distance(p: Point = new Point(0, 0)) {
     return Point.distance(this, p);
   }
 
@@ -78,7 +78,7 @@ export class Point {
   }
 
   rotate(p: Point, theta: number) {
-    return Point.rotate(this, p, theta);
+    return this.clone().set(Point.rotate(this, p, theta)) as this;
   }
 
   static print(p: Point) {
@@ -108,18 +108,17 @@ export class Point {
   }
 
   lerp(p: Point, t: number) {
-    return Point.lerp(this, p, t);
+    return this.clone().set(Point.lerp(this, p, t)) as this;
   }
 
-  clone() {
-    return new Point(this.x, this.y);
+  clone(): this {
+    return new (this.constructor as any)(this.x, this.y);
   }
 
-  set(p: Point) {
-    for (const key in p) {
-      // @ts-ignore
-      if (typeof p[key] !== "function") this[key] = p[key];
-    }
+  set(p: Pick<Point, "x" | "y">) {
+    this.x = p.x;
+    this.y = p.y;
+    return this;
   }
 
   export(): PointExport {
@@ -129,7 +128,7 @@ export class Point {
     };
   }
 
-	static from(point: PointExport) {
-		return new Point(point.x, point.y);
-	}
+  static from(point: PointExport) {
+    return new Point(point.x, point.y);
+  }
 }

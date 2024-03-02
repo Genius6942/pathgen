@@ -15,7 +15,15 @@
     "checkJs": true,
     "isolatedModules": true,
     "moduleResolution": "node",
-    "types": ["@types/wicg-file-system-access"]
+    "types": ["@types/wicg-file-system-access"],
+    "baseUrl": ".",
+    "paths": {
+      "$lib": ["./src/lib"],
+      "$lib/*": ["./src/lib/*"],
+      "$utils": ["./src/utils"],
+      "$utils/*": ["./src/utils/*"],
+
+    }
   },
   "include": ["src/**/*.ts", "src/**/*.js", "src/**/*.svelte"],
   "references": [{ "path": "./tsconfig.node.json" }]

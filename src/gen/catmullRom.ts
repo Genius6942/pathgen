@@ -2,6 +2,16 @@ import { Point } from "../utils";
 import { GeneratedPoint, findDerivative, findPoint } from "./utils";
 
 export const catmullRom = (path: Point[]) => {
+  // initial setup here
+
+  const first = path[0];
+  const second = path[1];
+  const last = path[path.length - 1];
+  const firstGhostPoint = first.multiply(2).subtract(second);
+  path.unshift(firstGhostPoint);
+  path.push(last);
+
+
   const newPath: GeneratedPoint[] = [];
   const lastPoint = new GeneratedPoint(path[path.length - 2].x, path[path.length - 2].y);
   for (let j = 0; j < path.length - 3; j++) {
