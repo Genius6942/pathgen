@@ -9,12 +9,9 @@
     pushHistory,
     state,
     undo,
+    type PathPointOptions,
   } from ".";
-  import {
-    getWindowPoint,
-    render as renderCanvas,
-    transformPoint,
-  } from "./renderLogic";
+  import { getWindowPoint, render as renderCanvas, transformPoint } from "./renderLogic";
 
   let canvas: HTMLCanvasElement = null as any;
 
@@ -26,16 +23,14 @@
 
   let dragging: {
     index: number;
+    handle: number | null;
     offset: Point;
     dragged: boolean;
   } | null = null;
 
   onMount(() => {
     const removableListeners: [EventTarget, string, Function][] = [];
-    const bindRemovable = <
-      T extends EventTarget,
-      K extends keyof HTMLElementEventMap,
-    >(
+    const bindRemovable = <T extends EventTarget, K extends keyof HTMLElementEventMap>(
       item: T,
       event: K,
       listener: (this: T, ev: HTMLElementEventMap[K]) => any,
@@ -64,8 +59,7 @@
       const y = e.clientY - rect.top;
 
       mouse.x = ((x - canvas.width / 2) / (canvas.width / 2)) * CONSTANTS.scale;
-      mouse.y =
-        (-(y - canvas.height / 2) / (canvas.height / 2)) * CONSTANTS.scale;
+      mouse.y = (-(y - canvas.height / 2) / (canvas.height / 2)) * CONSTANTS.scale;
     });
 
     bindRemovable(canvas, "mousedown", (e) => {
@@ -74,8 +68,7 @@
       const y = e.clientY - rect.top;
 
       mouse.x = ((x - canvas.width / 2) / (canvas.width / 2)) * CONSTANTS.scale;
-      mouse.y =
-        (-(y - canvas.height / 2) / (canvas.height / 2)) * CONSTANTS.scale;
+      mouse.y = (-(y - canvas.height / 2) / (canvas.height / 2)) * CONSTANTS.scale;
     });
 
     bindRemovable(document, "keydown", (e) => {
@@ -92,7 +85,6 @@
       if (found) e.preventDefault();
     });
 
-
     bindRemovable(canvas, "mousedown", () => {
       const m = transformPoint(mouse, canvas);
       $state.selected = $points.findIndex(
@@ -101,33 +93,85 @@
           CONSTANTS.point.radius * (size / CONSTANTS.scale)
       );
 
-      if ($state.selected === -1) {
+      let foundHandle = false;
+      $points.forEach((point, pointIndex) => {
+        const handleIndex = point.handles.findIndex(
+          (handle) =>
+            transformPoint(point.add(handle), canvas).distance(m) <=
+            CONSTANTS.point.handle.radius * (size / CONSTANTS.scale)
+        );
+        if (handleIndex !== -1) {
+          $state.selectedHandle = { point: pointIndex, handle: handleIndex };
+          foundHandle = true;
+        }
+      });
+
+      if (!foundHandle) $state.selectedHandle = null;
+
+      console.log($state.selectedHandle);
+    });
+
+    bindRemovable(canvas, "contextmenu", (e) => {
+      e.preventDefault();
+      const m = transformPoint(mouse, canvas);
+      const index = $points.findIndex(
+        (point) =>
+          transformPoint(point, canvas).distance(m) <=
+          CONSTANTS.point.radius * (size / CONSTANTS.scale)
+      );
+      if (index !== -1) {
+        const p = getWindowPoint($points[index], canvas);
+        p.x += 20;
+        // showMenu([{ label: "Delete", action: () => $points.splice(index, 1) }], p);
+      }
+    });
+
+    bindRemovable(canvas, "dblclick", () => {
+      if ($state.selected !== -1) {
+        const p = getWindowPoint($points[$state.selected], canvas);
+        p.x += 20;
+        // showMenu([{ label: "Delete", action: () => $points.splice($state.selected, 1) }], p);
+      }
+    });
+
+    bindRemovable(document, "mousedown", () => {
+      if ($state.selected === -1 && !$state.selectedHandle) {
         // spawn new point
         points.update((p) => {
-          p.push(new PathPoint(mouse.x, mouse.y, { flags: {} }));
+          const handles: PathPointOptions["handles"] =
+            $config.algorithm === "catmull-rom"
+              ? []
+              : [new Point(-8, 0), new Point(8, 0)];
+          console.log(handles, $config.algorithm);
+          p.push(new PathPoint(mouse.x, mouse.y, { flags: {}, handles }));
           return p;
         });
       } else {
-        dragging = {
-          index: $state.selected,
-          offset: new Point(
-            mouse.x - $points[$state.selected].x,
-            mouse.y - $points[$state.selected].y
-          ),
-          dragged: false,
-        };
+        if ($state.selectedHandle) {
+          const { point, handle } = $state.selectedHandle;
+          dragging = {
+            index: point,
+            handle: handle,
+            offset: mouse.subtract($points[point].add($points[point].handles[handle])),
+            dragged: false,
+          };
+        } else {
+          dragging = {
+            index: $state.selected,
+            handle: null,
+            offset: new Point(
+              mouse.x - $points[$state.selected].x,
+              mouse.y - $points[$state.selected].y
+            ),
+            dragged: false,
+          };
+        }
         0;
       }
     });
 
-    bindRemovable(document, "mouseup", (e) => {
-      if (dragging && !dragging.dragged) {
-        e.stopImmediatePropagation();
-        const p = getWindowPoint($points[dragging.index], canvas);
-        p.x += 20;
-        const index = dragging.index;
-        // showMenu([{ label: "Delete", action: () => $points.splice(index, 1) }], p);
-      } else {
+    bindRemovable(document, "mouseup", () => {
+      if (!dragging || dragging.dragged) {
         pushHistory();
       }
 
@@ -138,12 +182,21 @@
       if (dragging) {
         dragging.dragged = true;
         points.update((p) => {
-          p[dragging?.index!].set(
-            new Point(
-              mouse.x - dragging?.offset.x!,
-              mouse.y - dragging?.offset.y!
-            )
-          );
+          dragging = dragging!;
+          if (dragging.handle === null) {
+            p[dragging.index].set(
+              new Point(mouse.x - dragging.offset.x, mouse.y - dragging.offset.y)
+            );
+          } else {
+            p[dragging.index].handles[dragging.handle].set(
+              new Point(
+                mouse.x - dragging.offset.x - p[dragging.index].x,
+                mouse.y - dragging.offset.y - p[dragging.index].y
+              )
+            );
+            if ($config.algorithm === "cubic-spline")
+              p[dragging.index].makeCollinear(dragging.handle);
+          }
           return p;
         });
       }
@@ -174,8 +227,34 @@
         }
       } else if (e.key === "Escape") {
         $state.selected = -1;
+        $state.selectedHandle = null;
+      } else if (e.key === "ArrowLeft" && $state.selected !== -1) {
+        const amt = e.shiftKey ? 0.2 : 2;
+        points.update((p) => {
+          p[$state.selected].x -= amt;
+          return p;
+        });
+      } else if (e.key === "ArrowRight" && $state.selected !== -1) {
+        const amt = e.shiftKey ? 0.2 : 2;
+        points.update((p) => {
+          p[$state.selected].x += amt;
+          return p;
+        });
+      } else if (e.key === "ArrowUp" && $state.selected !== -1) {
+        const amt = e.shiftKey ? 0.2 : 2;
+        points.update((p) => {
+          p[$state.selected].y += amt;
+          return p;
+        });
+      } else if (e.key === "ArrowDown" && $state.selected !== -1) {
+        const amt = e.shiftKey ? 0.2 : 2;
+        points.update((p) => {
+          p[$state.selected].y -= amt;
+          return p;
+        });
       }
     });
+
     // very cursed thing to get it to render on initial load
     setTimeout(() => {
       mouse.x = 0;

@@ -15,7 +15,7 @@ Object.keys(backgrounds).forEach((key) => {
 
 // utils stuff
 
-export const transformPoint = (point: Point, canvas: HTMLCanvasElement) => {
+export const transformPoint = <T extends Point>(point: T, canvas: HTMLCanvasElement) => {
   const p = point.clone();
   p.x = point.x * (canvas.width / 2 / CONSTANTS.scale) + canvas.width / 2;
   p.y = point.y * (canvas.height / 2 / -CONSTANTS.scale) + canvas.height / 2;
@@ -62,10 +62,50 @@ export const drawPath = (ctx: CanvasRenderingContext2D) => {
     ctx.beginPath();
     ctx.moveTo(path[i].x, path[i].y);
     ctx.lineTo(path[i + 1].x, path[i + 1].y);
-    ctx.strokeStyle = false ? CONSTANTS.path.error : CONSTANTS.path.color;
+    ctx.strokeStyle = CONSTANTS.path.color;
     ctx.lineWidth = CONSTANTS.path.thickness * scale;
     ctx.stroke();
   }
+};
+
+export const drawHandleLinks = (ctx: CanvasRenderingContext2D) => {
+  const scale = ctx.canvas.height / CONSTANTS.scale;
+
+  get(points).forEach((point) => {
+    const p = transformPoint(point, ctx.canvas);
+    point.handles.forEach((handle) => {
+      const h = transformPoint(handle.add(point), ctx.canvas);
+      ctx.beginPath();
+      ctx.moveTo(h.x, h.y);
+      ctx.lineTo(p.x, p.y);
+      ctx.strokeStyle = CONSTANTS.point.handle.link.color;
+      ctx.lineWidth = CONSTANTS.point.handle.link.thickness * scale;
+      ctx.stroke();
+    });
+  });
+};
+
+export const drawHandles = (ctx: CanvasRenderingContext2D, mouse: Point) => {
+  const scale = ctx.canvas.height / CONSTANTS.scale;
+  const m = transformPoint(mouse, ctx.canvas);
+
+  get(points).forEach((point, pointIndex) => {
+		const selectedHandle = get(state).selectedHandle;
+    point.handles.forEach((handle, handleIndex) => {
+      const h = transformPoint(handle.add(point), ctx.canvas);
+      ctx.beginPath();
+      ctx.arc(h.x, h.y, CONSTANTS.point.handle.radius * scale, 0, Math.PI * 2);
+      ctx.fillStyle =
+        selectedHandle && selectedHandle.point === pointIndex && selectedHandle.handle === handleIndex
+          ? CONSTANTS.point.handle.selected
+          : h.distance(m) <= CONSTANTS.point.handle.radius * scale
+          ? CONSTANTS.point.handle.hover
+          : CONSTANTS.point.handle.color;
+      ctx.strokeStyle = CONSTANTS.point.handle.border.color;
+      ctx.fill();
+      ctx.stroke();
+    });
+  });
 };
 
 export const drawPoints = (ctx: CanvasRenderingContext2D, mouse: Point) => {
@@ -105,6 +145,8 @@ export const render = (ctx: CanvasRenderingContext2D, mouse: Point) => {
   drawBackground(ctx);
   drawBoundaries(ctx);
   drawPath(ctx);
+  drawHandleLinks(ctx);
+  drawHandles(ctx, mouse);
   drawPoints(ctx, mouse);
   drawMouse(ctx, mouse);
 };

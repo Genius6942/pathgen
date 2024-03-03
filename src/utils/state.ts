@@ -64,7 +64,7 @@ export interface PathConfig {
 }
 
 export const config = writable<PathConfig>({
-  algorithm: "catmull-rom",
+  algorithm: "cubic-spline",
   background: "over-under",
   autosave: false,
   flags: {},
@@ -81,11 +81,13 @@ export interface AppState {
   selected: number;
   generatedPoints: GeneratedPoint[];
   fileHandle: FileSystemFileHandle | null;
+	selectedHandle: {handle: number, point: number} | null;
 }
 export const state = writable<AppState>({
   selected: -1,
   generatedPoints: [],
   fileHandle: null,
+	selectedHandle: null,
 });
 
 points.subscribe((p) => {
@@ -100,8 +102,8 @@ points.subscribe((p) => {
   });
 });
 
-config.subscribe(() =>{
-	const p = get(points);
+config.subscribe(() => {
+  const p = get(points);
   if (p.length < 2) return state.update((s) => ({ ...s, generatedPoints: [] }));
   const method = get(config).algorithm;
   const algorithm = pathAlgorithms[method];
@@ -122,7 +124,8 @@ const exportData = () => {
 };
 
 const importData = (data: any) => {
-  if (!data.config || !data.points || !data.version) throw alert("invalid file");
+  if (!data.config || !data.points || !data.version)
+    throw alert("invalid file" + (!data.version ? " (no version)" : ""));
   if (
     data.version !== CONSTANTS.version &&
     !confirm(

@@ -35,6 +35,7 @@
           <label>
 						Algorithm:
             <select
+							value={$config.algorithm}
               on:change={(e) =>{
 								// @ts-ignore
 								const newValue = e.target.value;

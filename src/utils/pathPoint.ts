@@ -31,6 +31,25 @@ export class PathPoint extends Point {
     this.flags = val;
   }
 
+  /**
+   * make all handles fall on the line between handle at `index` and point
+   * @param index index of handle to base linear thingy off of
+   */
+  makeCollinear(index: number) {
+    if (index > this.handles.length - 1) return;
+    const anchor = this.handles[index];
+    const anchorDistance = anchor.distance();
+
+    this.handles.forEach((handle, idx) => {
+      if (idx === index) return;
+      const distance = handle.distance();
+      const ratio = distance / anchorDistance;
+
+      handle.x = -anchor.x * ratio;
+      handle.y = -anchor.y * ratio;
+    });
+  }
+
   clone() {
     return new PathPoint(this.x, this.y, {
       flags: this.flags,

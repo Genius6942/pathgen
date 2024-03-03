@@ -11,12 +11,11 @@ export const catmullRom = (path: Point[]) => {
   path.unshift(firstGhostPoint);
   path.push(last);
 
-
   const newPath: GeneratedPoint[] = [];
   const lastPoint = new GeneratedPoint(path[path.length - 2].x, path[path.length - 2].y);
   for (let j = 0; j < path.length - 3; j++) {
     const dist = Point.distance(path[j + 1], path[j + 2]);
-    const nu = Math.floor(dist / 2.5);
+    const nu = Math.floor(dist / 1);
     for (let i = 0; i < nu; i++) {
       const t = i / nu;
       const addPoint = findPoint(path[j], path[j + 1], path[j + 2], path[j + 3], t);
