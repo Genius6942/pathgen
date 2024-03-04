@@ -7,8 +7,8 @@ let directoryPath: string;
 
 (async () => {
   try {
-    filePath = await getFile();
-    directoryPath = await getDirectory();
+    filePath = (await getFile()).trim();
+    directoryPath = (await getDirectory()).trim();
   } catch (error) {
     console.error(error);
     process.exit(1);

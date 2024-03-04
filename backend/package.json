@@ -4,7 +4,8 @@
 	"type": "module",
 	"scripts": {
 		"start": "bun run src/index.ts",
-		"build": "bash build.sh"
+		"build": "bash build.sh",
+		"build:windows": "powershell.exe ./build.ps1"
 	},
 	"devDependencies": {
 		"@types/bun": "latest",
