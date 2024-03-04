@@ -79,16 +79,32 @@ config.subscribe((v) => {
 
 export interface AppState {
   selected: number;
+  selectedHandle: { handle: number; point: number } | null;
   generatedPoints: GeneratedPoint[];
   fileHandle: FileSystemFileHandle | null;
-  selectedHandle: { handle: number; point: number } | null;
 }
 export const state = writable<AppState>({
   selected: -1,
+  selectedHandle: null,
   generatedPoints: [],
   fileHandle: null,
+});
+
+export const lastSelected = writable<{
+  selected: number;
+  selectedHandle: { handle: number; point: number } | null;
+}>({
+  selected: -1,
   selectedHandle: null,
 });
+
+export const updateLastSelected = () => {
+  const s = get(state);
+  lastSelected.set({
+    selected: s.selected,
+    selectedHandle: JSON.parse(JSON.stringify(s.selectedHandle)),
+  });
+};
 
 points.subscribe((p) => {
   if (p.length < 2) return state.update((s) => ({ ...s, generatedPoints: [] }));

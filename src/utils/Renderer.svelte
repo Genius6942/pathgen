@@ -10,6 +10,8 @@
     state,
     undo,
     type PathPointOptions,
+    lastSelected,
+    updateLastSelected,
   } from ".";
   import { getWindowPoint, render as renderCanvas, transformPoint } from "./renderLogic";
 
@@ -137,12 +139,10 @@
         // spawn new point
         points.update((p) => {
           const handles: PathPointOptions["handles"] =
-            $config.algorithm === "catmull-rom"
-              ? []
-              : [ new Point(8, 0)];
-					if (p.length > 1) {
-						p[p.length - 1].handles.push(new Point(-8, 0));
-					}
+            $config.algorithm === "catmull-rom" ? [] : [new Point(8, 0)];
+          if (p.length > 1) {
+            p[p.length - 1].handles.push(new Point(-8, 0));
+          }
           p.push(new PathPoint(mouse.x, mouse.y, { flags: {}, handles }));
           return p;
         });
@@ -174,6 +174,18 @@
       if (!dragging || dragging.dragged) {
         pushHistory();
       }
+
+      if (dragging && !dragging.dragged) {
+        console.log("eeee");
+        if (
+          $state.selected === $lastSelected.selected &&
+          $state.selectedHandle === $lastSelected.selectedHandle
+        ) {
+          $state.selected = -1;
+          $state.selectedHandle = null;
+        }
+      }
+      updateLastSelected();
 
       dragging = null;
     });
@@ -212,9 +224,9 @@
         if ($state.selected === -1) {
           points.update((p) => {
             p.pop();
-						if (p.length > 0 && p.at(-1)!.handles.length > 1) {
-							p.at(-1)!.handles.pop();
-						}
+            if (p.length > 0 && p.at(-1)!.handles.length > 1) {
+              p.at(-1)!.handles.pop();
+            }
             return p;
           });
 
@@ -231,6 +243,7 @@
       } else if (e.key === "Escape") {
         $state.selected = -1;
         $state.selectedHandle = null;
+				updateLastSelected();
       } else if (e.key === "ArrowLeft" && $state.selected !== -1) {
         const amt = e.shiftKey ? 0.2 : 2;
         points.update((p) => {
