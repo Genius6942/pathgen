@@ -107,8 +107,6 @@
       });
 
       if (!foundHandle) $state.selectedHandle = null;
-
-      console.log($state.selectedHandle);
     });
 
     bindRemovable(canvas, "contextmenu", (e) => {
@@ -142,7 +140,6 @@
             $config.algorithm === "catmull-rom"
               ? []
               : [new Point(-8, 0), new Point(8, 0)];
-          console.log(handles, $config.algorithm);
           p.push(new PathPoint(mouse.x, mouse.y, { flags: {}, handles }));
           return p;
         });
@@ -255,6 +252,11 @@
       }
     });
 
+    window.addEventListener("beforeunload", (e) => {
+      e.preventDefault();
+      e.returnValue = "";
+    });
+
     // very cursed thing to get it to render on initial load
     setTimeout(() => {
       mouse.x = 0;
@@ -281,4 +283,4 @@
   }
 </script>
 
-<canvas width={size} height={size} bind:this={canvas} class="cursor-none" />
+<canvas width={size} height={size} bind:this={canvas} />

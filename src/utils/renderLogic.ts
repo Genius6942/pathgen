@@ -148,5 +148,5 @@ export const render = (ctx: CanvasRenderingContext2D, mouse: Point) => {
   drawHandleLinks(ctx);
   drawHandles(ctx, mouse);
   drawPoints(ctx, mouse);
-  drawMouse(ctx, mouse);
+  // drawMouse(ctx, mouse);
 };
