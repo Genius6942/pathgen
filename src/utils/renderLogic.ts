@@ -90,13 +90,15 @@ export const drawHandles = (ctx: CanvasRenderingContext2D, mouse: Point) => {
   const m = transformPoint(mouse, ctx.canvas);
 
   get(points).forEach((point, pointIndex) => {
-		const selectedHandle = get(state).selectedHandle;
+    const selectedHandle = get(state).selectedHandle;
     point.handles.forEach((handle, handleIndex) => {
       const h = transformPoint(handle.add(point), ctx.canvas);
       ctx.beginPath();
       ctx.arc(h.x, h.y, CONSTANTS.point.handle.radius * scale, 0, Math.PI * 2);
       ctx.fillStyle =
-        selectedHandle && selectedHandle.point === pointIndex && selectedHandle.handle === handleIndex
+        selectedHandle &&
+        selectedHandle.point === pointIndex &&
+        selectedHandle.handle === handleIndex
           ? CONSTANTS.point.handle.selected
           : h.distance(m) <= CONSTANTS.point.handle.radius * scale
           ? CONSTANTS.point.handle.hover
@@ -129,6 +131,33 @@ export const drawPoints = (ctx: CanvasRenderingContext2D, mouse: Point) => {
   });
 };
 
+export const renderNearestPoint = (ctx: CanvasRenderingContext2D, mouse: Point) => {
+  const path = get(state).generatedPoints.map((point) =>
+    transformPoint(point, ctx.canvas)
+  );
+  if (path.length < 2) return;
+
+  const m = transformPoint(mouse, ctx.canvas);
+  let nearestPoint = path[0];
+  path.forEach((point) => {
+    if (point.distance(m) < nearestPoint.distance(m)) {
+      nearestPoint = point;
+    }
+  });
+
+  ctx.beginPath();
+  ctx.arc(
+    nearestPoint.x,
+    nearestPoint.y,
+    (0.4 * ctx.canvas.height) / CONSTANTS.scale,
+    0,
+    Math.PI * 2
+  );
+  ctx.fillStyle = "white";
+  ctx.fill();
+  ctx.closePath();
+};
+
 export const drawMouse = (ctx: CanvasRenderingContext2D, mouse: Point) => {
   const scale = ctx.canvas.height / CONSTANTS.scale;
 
@@ -147,6 +176,7 @@ export const render = (ctx: CanvasRenderingContext2D, mouse: Point) => {
   drawPath(ctx);
   drawHandleLinks(ctx);
   drawHandles(ctx, mouse);
+  renderNearestPoint(ctx, mouse);
   drawPoints(ctx, mouse);
   // drawMouse(ctx, mouse);
 };
