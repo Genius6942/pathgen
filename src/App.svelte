@@ -27,7 +27,7 @@
       </div>
     </div>
     <div
-      class="flex gap-3 p-5 w-[500px] border-black border-white border-2 rounded-3xl m-10 flex-col items-stretch"
+      class="flex gap-3 p-5 w-[500px] border-white border-2 rounded-3xl m-10 flex-col items-stretch"
     >
       {#if !point}
         <div class="flex flex-col gap-2">
@@ -140,9 +140,9 @@
                   />
 
                   <div
-                    class="relative w-10 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer bg-gray-700 peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-[110%] after:content-[''] after:absolute after:top-[4px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all border-gray-600 peer-checked:bg-blue-600"
+                    class="relative w-10 h- peer-focus:outline-none rounded-full peer bg-gray-700 peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-[110%] after:content-[''] after:absolute after:top-[4px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all border-gray-600 peer-checked:bg-blue-600"
                   ></div>
-                  <span class="ms-3 text-sm font-medium text-gray-900 text-gray-300">
+                  <span class="ms-3 text-sm font-medium text-gray-300">
                     {flag.key}
                   </span>
                 </label>
