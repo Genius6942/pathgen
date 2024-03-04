@@ -29,43 +29,46 @@
     <div
       class="flex gap-3 p-5 w-[500px] border-white border-2 rounded-3xl m-10 flex-col items-stretch"
     >
-      {#if !point}
-        <div class="flex flex-col gap-2">
-          <h1 class="text-3xl">Path config</h1>
-          <label>
-            Algorithm:
-            <select
-              value={$config.algorithm}
-              on:change={(e) => {
+      <div class="flex flex-col gap-2">
+        <h1 class="text-3xl">Path Config</h1>
+        <label>
+          Algorithm:
+          <select
+            value={$config.algorithm}
+            on:change={(e) => {
+              // @ts-ignore
+              const newValue = e.target.value;
+
+              if (
+                !confirm(
+                  "Are you sure you want to change the algorithm? This will wipe all points (methods are incompatible)"
+                )
+              ) {
                 // @ts-ignore
-                const newValue = e.target.value;
+                e.target.value = $config.algorithm;
+                return;
+              }
 
-                if (
-                  !confirm(
-                    "Are you sure you want to change the algorithm? This will wipe all points (methods are incompatible)"
-                  )
-                ) {
-                  // @ts-ignore
-                  e.target.value = $config.algorithm;
-                  return;
-                }
+              $points = [];
 
-                $points = [];
+              $config.algorithm = newValue;
+            }}
+            class="bg-transparent text-lg border-white border rounded-full p-1"
+          >
+            {#each Object.keys(pathAlgorithms) as algorithm}
+              <option value={algorithm}>
+                {algorithm
+                  .split("-")
+                  .map((item) => item[0].toUpperCase() + item.slice(1))
+                  .join(" ")}
+              </option>
+            {/each}
+          </select>
+        </label>
+        <h1 class="text-3xl">Editing Config</h1>
+				
 
-                $config.algorithm = newValue;
-              }}
-              class="bg-transparent text-lg border-white border rounded-full p-1"
-            >
-              {#each Object.keys(pathAlgorithms) as algorithm}
-                <option value={algorithm}>
-                  {algorithm
-                    .split("-")
-                    .map((item) => item[0].toUpperCase() + item.slice(1))
-                    .join(" ")}
-                </option>
-              {/each}
-            </select>
-          </label>
+        {#if !point}
           <h1 class="text-3xl">Flags</h1>
           {#each Array(Object.keys($config.flags).length)
             .fill(null)
@@ -120,10 +123,7 @@
             >
               Create
             </button>
-          </div>
-        </div>
-      {:else}
-        <div class="flex flex-col gap-2">
+          </div>{:else}
           <h1 class="text-3xl">
             Point at ({point.x.toFixed(2)}, {point.y.toFixed(2)})
           </h1>
@@ -164,8 +164,8 @@
               </div>
             {/if}
           {/each}
-        </div>
-      {/if}
+        {/if}
+      </div>
       <div class="border-t-2 mt-auto py-2 border-transparent">
         <div class="flex gap-3 items-center relative justify-between">
           <button class="button" on:click={() => undo(1)}>Undo</button>
