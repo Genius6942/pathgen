@@ -58,7 +58,7 @@ export class BezierSpline {
         this.sectioned[i].cumD[j][1] += lastLD;
         // console.log(this.sectioned[i].cumD[j])
       }
-      lastLD = lastLD + this.sectioned[i].cumD[this.sectioned[i].cumD.length - 1][1];
+      lastLD = this.sectioned[i].cumD[this.sectioned[i].cumD.length - 1][1];
     }
     return this;
   }
