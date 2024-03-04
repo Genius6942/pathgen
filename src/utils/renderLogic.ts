@@ -176,7 +176,7 @@ export const render = (ctx: CanvasRenderingContext2D, mouse: Point) => {
   drawPath(ctx);
   drawHandleLinks(ctx);
   drawHandles(ctx, mouse);
-  renderNearestPoint(ctx, mouse);
+  if (get(state).editingMode === "flagPoint") renderNearestPoint(ctx, mouse);
   drawPoints(ctx, mouse);
   // drawMouse(ctx, mouse);
 };

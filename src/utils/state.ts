@@ -11,6 +11,7 @@ import {
   PathPoint,
   Point,
   type PathPointExport,
+	type PathPointOptions,
   type PointExport,
 } from ".";
 import type { Background } from "./background";
@@ -55,6 +56,20 @@ export function customWritable<T>(initialValue: T): Writable<T> & {
 }
 
 export const points = writable<PathPoint[]>([]);
+
+export type FlagPoint = {
+  pathIndex: number;
+  pointIndex: number;
+  flags: PathPointOptions["flags"];
+};
+
+export const flagPoints = writable<FlagPoint[]>([]);
+export const addFlagPoint = (point: FlagPoint) => {
+	flagPoints.update((f) => {
+		f.push(point);
+		return f;
+	});
+};
 
 export interface PathConfig {
   algorithm: PathAlgorithm;
@@ -270,13 +285,8 @@ config.subscribe(() => {
   if (get(config).autosave) save();
 });
 
-export const addFlag = (
-  flag: string,
-  type: "boolean" | "number",
-  overWrite = false
-) => {
-  if (flag in get(config).flags && !overWrite)
-    throw new Error("Flag already exists");
+export const addFlag = (flag: string, type: "boolean" | "number", overWrite = false) => {
+  if (flag in get(config).flags && !overWrite) throw new Error("Flag already exists");
   config.update((c) => {
     c.flags[flag] = type;
     return c;

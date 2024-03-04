@@ -13,11 +13,7 @@
     lastSelected,
     updateLastSelected,
   } from ".";
-  import {
-    getWindowPoint,
-    render as renderCanvas,
-    transformPoint,
-  } from "./renderLogic";
+  import { getWindowPoint, render as renderCanvas, transformPoint } from "./renderLogic";
 
   let canvas: HTMLCanvasElement = null as any;
 
@@ -36,10 +32,7 @@
 
   onMount(() => {
     const removableListeners: [EventTarget, string, Function][] = [];
-    const bindRemovable = <
-      T extends EventTarget,
-      K extends keyof HTMLElementEventMap,
-    >(
+    const bindRemovable = <T extends EventTarget, K extends keyof HTMLElementEventMap>(
       item: T,
       event: K,
       listener: (this: T, ev: HTMLElementEventMap[K]) => any,
@@ -68,8 +61,7 @@
       const y = e.clientY - rect.top;
 
       mouse.x = ((x - canvas.width / 2) / (canvas.width / 2)) * CONSTANTS.scale;
-      mouse.y =
-        (-(y - canvas.height / 2) / (canvas.height / 2)) * CONSTANTS.scale;
+      mouse.y = (-(y - canvas.height / 2) / (canvas.height / 2)) * CONSTANTS.scale;
     });
 
     bindRemovable(canvas, "mousedown", (e) => {
@@ -78,8 +70,7 @@
       const y = e.clientY - rect.top;
 
       mouse.x = ((x - canvas.width / 2) / (canvas.width / 2)) * CONSTANTS.scale;
-      mouse.y =
-        (-(y - canvas.height / 2) / (canvas.height / 2)) * CONSTANTS.scale;
+      mouse.y = (-(y - canvas.height / 2) / (canvas.height / 2)) * CONSTANTS.scale;
     });
 
     bindRemovable(document, "keydown", (e) => {
@@ -145,26 +136,28 @@
 
     bindRemovable(canvas, "mousedown", () => {
       if ($state.selected === -1 && !$state.selectedHandle) {
-        // spawn new point
-        points.update((p) => {
-          const handles: PathPointOptions["handles"] =
-            $config.algorithm === "catmull-rom" ? [] : [new Point(8, 0)];
-          if (p.length > 1 && ["cubic-spline"].includes($config.algorithm)) {
-            p[p.length - 1].handles.push(new Point(-8, 0));
-            p[p.length - 1].makeCollinear(0);
-          }
-          p.push(new PathPoint(mouse.x, mouse.y, { flags: {}, handles }));
-          return p;
-        });
+        if ($state.editingMode === "pathPoint") {
+          // spawn new point
+          points.update((p) => {
+            const handles: PathPointOptions["handles"] =
+              $config.algorithm === "catmull-rom" ? [] : [new Point(8, 0)];
+            if (p.length > 1 && ["cubic-spline"].includes($config.algorithm)) {
+              p[p.length - 1].handles.push(new Point(-8, 0));
+              p[p.length - 1].makeCollinear(0);
+            }
+            p.push(new PathPoint(mouse.x, mouse.y, { flags: {}, handles }));
+            return p;
+          });
+        } else if ($state.editingMode === "flagPoint") {
+          // spawn new flag
+        }
       } else {
         if ($state.selectedHandle) {
           const { point, handle } = $state.selectedHandle;
           dragging = {
             index: point,
             handle: handle,
-            offset: mouse.subtract(
-              $points[point].add($points[point].handles[handle])
-            ),
+            offset: mouse.subtract($points[point].add($points[point].handles[handle])),
             dragged: false,
           };
         } else {
@@ -209,10 +202,7 @@
           dragging = dragging!;
           if (dragging.handle === null) {
             p[dragging.index].set(
-              new Point(
-                mouse.x - dragging.offset.x,
-                mouse.y - dragging.offset.y
-              )
+              new Point(mouse.x - dragging.offset.x, mouse.y - dragging.offset.y)
             );
           } else {
             p[dragging.index].handles[dragging.handle].set(
