@@ -1,0 +1,23 @@
+{
+	"name": "pathgen-backend",
+	"module": "index.ts",
+	"type": "module",
+	"scripts": {
+		"start": "bun run src/index.ts",
+		"build": "bash build.sh"
+	},
+	"devDependencies": {
+		"@types/bun": "latest",
+		"ts-loader": "^9.5.1",
+		"typescript": "^5.3.3",
+		"webpack": "^5.90.3",
+		"webpack-cli": "^5.1.4"
+	},
+	"peerDependencies": {
+		"typescript": "^5.0.0"
+	},
+	"dependencies": {
+		"@types/inquirer": "^9.0.7",
+		"inquirer": "^9.2.15"
+	}
+}
