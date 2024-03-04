@@ -77,17 +77,21 @@ config.subscribe((v) => {
   }
 });
 
+export type EditingMode = "pathPoint" | "flagPoint";
+
 export interface AppState {
   selected: number;
   selectedHandle: { handle: number; point: number } | null;
   generatedPoints: GeneratedPoint[];
   fileHandle: FileSystemFileHandle | null;
+  editingMode: EditingMode;
 }
 export const state = writable<AppState>({
   selected: -1,
   selectedHandle: null,
   generatedPoints: [],
   fileHandle: null,
+  editingMode: "pathPoint",
 });
 
 export const lastSelected = writable<{
@@ -266,8 +270,13 @@ config.subscribe(() => {
   if (get(config).autosave) save();
 });
 
-export const addFlag = (flag: string, type: "boolean" | "number", overWrite = false) => {
-  if (flag in get(config).flags && !overWrite) throw new Error("Flag already exists");
+export const addFlag = (
+  flag: string,
+  type: "boolean" | "number",
+  overWrite = false
+) => {
+  if (flag in get(config).flags && !overWrite)
+    throw new Error("Flag already exists");
   config.update((c) => {
     c.flags[flag] = type;
     return c;
