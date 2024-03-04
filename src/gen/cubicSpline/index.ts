@@ -11,8 +11,8 @@ export const cubicSpline = (path: PathPoint[]): GeneratedPoint[] => {
   ];
   const lastPoint = path[path.length - 1];
   const last = [
-    new Point().set(lastPoint),
     new Point().set(lastPoint.handles[0].add(lastPoint)),
+    new Point().set(lastPoint),
   ];
   const between = path
     .slice(1, path.length - 1)
@@ -22,8 +22,6 @@ export const cubicSpline = (path: PathPoint[]): GeneratedPoint[] => {
       new Point().set(point.handles[1].add(point)),
     ])
     .flat();
-
-  console.log([...first, ...between, ...last]);
 
   const generator = new BezierSpline([...first, ...between, ...last]);
 

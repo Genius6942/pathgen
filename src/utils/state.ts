@@ -81,13 +81,13 @@ export interface AppState {
   selected: number;
   generatedPoints: GeneratedPoint[];
   fileHandle: FileSystemFileHandle | null;
-	selectedHandle: {handle: number, point: number} | null;
+  selectedHandle: { handle: number; point: number } | null;
 }
 export const state = writable<AppState>({
   selected: -1,
   generatedPoints: [],
   fileHandle: null,
-	selectedHandle: null,
+  selectedHandle: null,
 });
 
 points.subscribe((p) => {
@@ -97,8 +97,12 @@ points.subscribe((p) => {
   const waypoints: PathPoint[] = p.map((point) => point.clone());
 
   state.update((s) => {
-    s.generatedPoints = algorithm(waypoints);
-    return s;
+    try {
+      s.generatedPoints = algorithm(waypoints);
+      return s;
+    } catch {
+      return s;
+    }
   });
 });
 
