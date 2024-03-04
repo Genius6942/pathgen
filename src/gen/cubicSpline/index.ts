@@ -23,6 +23,8 @@ export const cubicSpline = (path: PathPoint[]): GeneratedPoint[] => {
     ])
     .flat();
 
+  
+  
   const generator = new BezierSpline([...first, ...between, ...last]);
 
   const res = generator.generateSpline(1, 24, 12);

@@ -13,7 +13,11 @@
     lastSelected,
     updateLastSelected,
   } from ".";
-  import { getWindowPoint, render as renderCanvas, transformPoint } from "./renderLogic";
+  import {
+    getWindowPoint,
+    render as renderCanvas,
+    transformPoint,
+  } from "./renderLogic";
 
   let canvas: HTMLCanvasElement = null as any;
 
@@ -32,7 +36,10 @@
 
   onMount(() => {
     const removableListeners: [EventTarget, string, Function][] = [];
-    const bindRemovable = <T extends EventTarget, K extends keyof HTMLElementEventMap>(
+    const bindRemovable = <
+      T extends EventTarget,
+      K extends keyof HTMLElementEventMap,
+    >(
       item: T,
       event: K,
       listener: (this: T, ev: HTMLElementEventMap[K]) => any,
@@ -61,7 +68,8 @@
       const y = e.clientY - rect.top;
 
       mouse.x = ((x - canvas.width / 2) / (canvas.width / 2)) * CONSTANTS.scale;
-      mouse.y = (-(y - canvas.height / 2) / (canvas.height / 2)) * CONSTANTS.scale;
+      mouse.y =
+        (-(y - canvas.height / 2) / (canvas.height / 2)) * CONSTANTS.scale;
     });
 
     bindRemovable(canvas, "mousedown", (e) => {
@@ -70,7 +78,8 @@
       const y = e.clientY - rect.top;
 
       mouse.x = ((x - canvas.width / 2) / (canvas.width / 2)) * CONSTANTS.scale;
-      mouse.y = (-(y - canvas.height / 2) / (canvas.height / 2)) * CONSTANTS.scale;
+      mouse.y =
+        (-(y - canvas.height / 2) / (canvas.height / 2)) * CONSTANTS.scale;
     });
 
     bindRemovable(document, "keydown", (e) => {
@@ -140,8 +149,9 @@
         points.update((p) => {
           const handles: PathPointOptions["handles"] =
             $config.algorithm === "catmull-rom" ? [] : [new Point(8, 0)];
-          if (p.length > 1) {
+          if (p.length > 1 && ["cubic-spline"].includes($config.algorithm)) {
             p[p.length - 1].handles.push(new Point(-8, 0));
+            p[p.length - 1].makeCollinear(0);
           }
           p.push(new PathPoint(mouse.x, mouse.y, { flags: {}, handles }));
           return p;
@@ -152,7 +162,9 @@
           dragging = {
             index: point,
             handle: handle,
-            offset: mouse.subtract($points[point].add($points[point].handles[handle])),
+            offset: mouse.subtract(
+              $points[point].add($points[point].handles[handle])
+            ),
             dragged: false,
           };
         } else {
@@ -197,7 +209,10 @@
           dragging = dragging!;
           if (dragging.handle === null) {
             p[dragging.index].set(
-              new Point(mouse.x - dragging.offset.x, mouse.y - dragging.offset.y)
+              new Point(
+                mouse.x - dragging.offset.x,
+                mouse.y - dragging.offset.y
+              )
             );
           } else {
             p[dragging.index].handles[dragging.handle].set(
@@ -243,7 +258,7 @@
       } else if (e.key === "Escape") {
         $state.selected = -1;
         $state.selectedHandle = null;
-				updateLastSelected();
+        updateLastSelected();
       } else if (e.key === "ArrowLeft" && $state.selected !== -1) {
         const amt = e.shiftKey ? 0.2 : 2;
         points.update((p) => {
