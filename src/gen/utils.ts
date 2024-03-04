@@ -56,6 +56,12 @@ export class GeneratedPoint extends Point {
 	speed: number = 0;
 	index: number = 0;
 
+	constructor(x: number = 0, y: number = 0, speed: number = 0, index: number = 0) {
+		super(x, y);
+		this.speed = speed;
+		this.index = index;
+	}
+
 	export(): GeneratedPointExport {
 		return {
 			x: this.x,

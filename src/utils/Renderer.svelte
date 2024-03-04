@@ -132,14 +132,17 @@
       }
     });
 
-    bindRemovable(document, "mousedown", () => {
+    bindRemovable(canvas, "mousedown", () => {
       if ($state.selected === -1 && !$state.selectedHandle) {
         // spawn new point
         points.update((p) => {
           const handles: PathPointOptions["handles"] =
             $config.algorithm === "catmull-rom"
               ? []
-              : [new Point(-8, 0), new Point(8, 0)];
+              : [ new Point(8, 0)];
+					if (p.length > 1) {
+						p[p.length - 1].handles.push(new Point(-8, 0));
+					}
           p.push(new PathPoint(mouse.x, mouse.y, { flags: {}, handles }));
           return p;
         });
@@ -209,6 +212,9 @@
         if ($state.selected === -1) {
           points.update((p) => {
             p.pop();
+						if (p.length > 0 && p.at(-1)!.handles.length > 1) {
+							p.at(-1)!.handles.pop();
+						}
             return p;
           });
 

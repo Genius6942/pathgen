@@ -1,0 +1,193 @@
+import { Point } from "$utils";
+import { Bernstein } from "./bernstein";
+
+export class BezierSpline {
+  points: Point[];
+  sectioned: Bernstein[];
+  spline: [number, Point, number][];
+  degree: number;
+  constructor(
+    points: Point[],
+    sectioned: Bernstein[] = [],
+    spline: [number, Point, number][] = [],
+    degree = 3
+  ) {
+    this.points = points;
+    this.sectioned = sectioned;
+    this.spline = spline;
+    this.degree = degree;
+  }
+
+  section() {
+    const sectionedPoints = [];
+    for (let i = 3; i < this.points.length; i += 3) {
+      const bez = new Bernstein([
+        this.points[i - 3],
+        this.points[i - 2],
+        this.points[i - 1],
+        this.points[i],
+      ]);
+      sectionedPoints.push(bez);
+    }
+
+    this.sectioned = sectionedPoints;
+  }
+
+  evaluate(t: number) {
+    if (t == this.sectioned.length) {
+      return this.sectioned[t - 1].evaluate(1);
+    }
+
+    // u is the integral part of t
+    const u = Math.floor(t);
+    const tPrime = t - u;
+    return this.sectioned[u].evaluate(tPrime);
+  }
+
+  inject(numPoints: number) {
+    if (this.sectioned.length == 0) {
+      this.section();
+    }
+    for (let i = 0; i < this.sectioned.length; i++) {
+      this.sectioned[i].inject(Math.floor(numPoints / this.sectioned.length));
+    }
+    return this;
+  }
+
+  MultiCumDistLUT() {
+    for (let i = 0; i < this.sectioned.length; i++) {
+      this.sectioned[i].generateCD();
+    }
+    return this;
+  }
+
+  getT(dist: number) {
+    for (let k = 0; k < this.sectioned.length; k++) {
+      for (let i = 1; i < this.sectioned[k].cumD.length; i++) {
+        if (this.sectioned[k].cumD[i][1] >= dist) {
+          const dValue1 = new Point(
+            this.sectioned[k].cumD[i - 1][0],
+            this.sectioned[k].cumD[i - 1][1]
+          );
+          const dValue2 = new Point(
+            this.sectioned[k].cumD[i][0],
+            this.sectioned[k].cumD[i][1]
+          );
+          const t = (dist - dValue1.y) / (dValue2.y - dValue1.y);
+          const findingT = Point.lerp(dValue1, dValue2, t);
+          return findingT.x + k;
+        }
+      }
+    }
+  }
+
+  spaceInject(distBetween: number) {
+    this.section();
+    this.inject(50 * this.sectioned.length);
+    this.MultiCumDistLUT();
+
+    const path: typeof this.spline = [];
+    const curveLength =
+      this.sectioned[this.sectioned.length - 1].cumD[
+        this.sectioned[this.sectioned.length - 1].cumD.length - 1
+      ][1];
+
+    const numPoints = Math.floor(curveLength / distBetween);
+
+    distBetween = curveLength / numPoints;
+
+    for (let i = 0; i < numPoints + 1; i++) {
+      const distAtPoint = i * distBetween;
+      const t = this.getT(distAtPoint);
+      const pt = this.evaluate(t!);
+      path.push([t!, pt, 0]);
+    }
+    this.spline = path;
+  }
+
+  update(distBetween: number) {
+    this.section();
+    this.inject(50 * this.sectioned.length);
+    this.MultiCumDistLUT();
+    this.spaceInject(distBetween);
+  }
+
+  // returns complete spline
+  generateSpline(distBetween: number, maxAccel: number) {
+    this.spaceInject(distBetween);
+    this.generateVelocities(maxAccel);
+    const path: [Point, number][] = [];
+
+    // first index is point, second part is speed
+    for (let i = 0; i < this.spline.length; i++) {
+      path.push([this.spline[i][1], this.spline[i][2]]);
+    }
+    return path;
+  }
+
+  static project(projected: Point, p1: Point, p2: Point) {
+    const aVector = projected.subtract(p1);
+    const bVector = Point.subtract(p2, p1);
+    return projected
+      .clone()
+      .set(
+        Point.sum(
+          p1,
+          bVector.multiply(
+            Point.dotProduct(aVector, bVector) / Point.dotProduct(bVector, bVector)
+          )
+        )
+      );
+  }
+
+  adjust3k_0() {
+    for (let i = 3; i < this.points.length - 1; i += 3) {
+      this.points[i] = BezierSpline.project(
+        this.points[i],
+        this.points[i - 1],
+        this.points[i + 1]
+      );
+    }
+    return this;
+  }
+
+  adjust3k_1() {
+    for (let i = 4; i < this.points.length; i += 3) {
+      this.points[i] = BezierSpline.project(
+        this.points[i],
+        this.points[i - 2],
+        this.points[i - 1]
+      );
+    }
+    return this;
+  }
+
+  adjust3k_2() {
+    for (let i = 2; i < this.points.length - 2; i += 3) {
+      this.points[i] = BezierSpline.project(
+        this.points[i],
+        this.points[i + 1],
+        this.points[i + 2]
+      );
+    }
+    return this;
+  }
+  curvature(t: number) {
+    const u = Math.floor(t);
+    const tPrime = t - u;
+    return this.sectioned[u].evaluate(tPrime);
+  }
+
+  generateVelocities(maxAccel: number) {
+    // velocity of last point to be 0
+    this.spline[this.spline.length - 1].push(0);
+
+    // velocity of all the other points
+    for (let i = this.spline.length - 1; i > 0; i--) {
+      const dist = Point.distance(this.spline[i][1], this.spline[i - 1][1]);
+      const newVel = Math.sqrt(2 * maxAccel * dist + Math.pow(this.spline[i][2], 2));
+      this.spline[i - 1].push(newVel);
+    }
+    return this;
+  }
+}

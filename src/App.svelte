@@ -33,23 +33,27 @@
         <div class="flex flex-col gap-2">
           <h1 class="text-3xl">Path config</h1>
           <label>
-						Algorithm:
+            Algorithm:
             <select
-							value={$config.algorithm}
-              on:change={(e) =>{
-								// @ts-ignore
-								const newValue = e.target.value;
+              value={$config.algorithm}
+              on:change={(e) => {
+                // @ts-ignore
+                const newValue = e.target.value;
 
-								if (!confirm("Are you sure you want to change the algorithm? This will wipe all points (methods are incompatible)")) {
-									// @ts-ignore
-									e.target.value = $config.algorithm;
-									return;
-								}
+                if (
+                  !confirm(
+                    "Are you sure you want to change the algorithm? This will wipe all points (methods are incompatible)"
+                  )
+                ) {
+                  // @ts-ignore
+                  e.target.value = $config.algorithm;
+                  return;
+                }
 
-								$points = [];
+                $points = [];
 
-								$config.algorithm = newValue;
-							}}
+                $config.algorithm = newValue;
+              }}
               class="bg-transparent text-lg border-white border rounded-full p-1"
             >
               {#each Object.keys(pathAlgorithms) as algorithm}
@@ -140,9 +144,10 @@
                   />
 
                   <div
-                    class="relative w-10 h- peer-focus:outline-none rounded-full peer bg-gray-700 peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-[110%] after:content-[''] after:absolute after:top-[4px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all border-gray-600 peer-checked:bg-blue-600"
+                    class="relative w-10 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-[110%] after:content-[''] after:absolute after:top-[4px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600"
                   ></div>
-                  <span class="ms-3 text-sm font-medium text-gray-300">
+
+                  <span class="ms-3 text-sm font-medium text-gray-900 dark:text-gray-300">
                     {flag.key}
                   </span>
                 </label>
