@@ -10,10 +10,19 @@
     state,
     undo,
     type PathPointOptions,
+    type Selection,
     lastSelected,
     updateLastSelected,
+    type FlagSelection,
+    type PointSelection,
+    type HandleSelection,
+    flagPoints,
   } from ".";
-  import { getWindowPoint, render as renderCanvas, transformPoint } from "./renderLogic";
+  import {
+    getWindowPoint,
+    render as renderCanvas,
+    transformPoint,
+  } from "./renderLogic";
 
   let canvas: HTMLCanvasElement = null as any;
 
@@ -23,16 +32,24 @@
 
   let size = 0;
 
-  let dragging: {
-    index: number;
-    handle: number | null;
+  type Dragging = {
+    type: Selection["type"];
+    data: Partial<
+      Omit<HandleSelection, "type"> &
+        Omit<PointSelection, "type"> &
+        Omit<FlagSelection, "type">
+    >;
     offset: Point;
     dragged: boolean;
-  } | null = null;
+  };
+  let dragging: Dragging | null = null;
 
   onMount(() => {
     const removableListeners: [EventTarget, string, Function][] = [];
-    const bindRemovable = <T extends EventTarget, K extends keyof HTMLElementEventMap>(
+    const bindRemovable = <
+      T extends EventTarget,
+      K extends keyof HTMLElementEventMap,
+    >(
       item: T,
       event: K,
       listener: (this: T, ev: HTMLElementEventMap[K]) => any,
@@ -61,7 +78,8 @@
       const y = e.clientY - rect.top;
 
       mouse.x = ((x - canvas.width / 2) / (canvas.width / 2)) * CONSTANTS.scale;
-      mouse.y = (-(y - canvas.height / 2) / (canvas.height / 2)) * CONSTANTS.scale;
+      mouse.y =
+        (-(y - canvas.height / 2) / (canvas.height / 2)) * CONSTANTS.scale;
     });
 
     bindRemovable(canvas, "mousedown", (e) => {
@@ -70,7 +88,8 @@
       const y = e.clientY - rect.top;
 
       mouse.x = ((x - canvas.width / 2) / (canvas.width / 2)) * CONSTANTS.scale;
-      mouse.y = (-(y - canvas.height / 2) / (canvas.height / 2)) * CONSTANTS.scale;
+      mouse.y =
+        (-(y - canvas.height / 2) / (canvas.height / 2)) * CONSTANTS.scale;
     });
 
     bindRemovable(document, "keydown", (e) => {
@@ -89,13 +108,19 @@
 
     bindRemovable(canvas, "mousedown", () => {
       const m = transformPoint(mouse, canvas);
-      $state.selected = $points.findIndex(
+      $state.selected = null;
+      const selectedPoint = $points.findIndex(
         (point) =>
           transformPoint(point, canvas).distance(m) <=
           CONSTANTS.point.radius * (size / CONSTANTS.scale)
       );
 
-      let foundHandle = false;
+      if (selectedPoint >= 0)
+        $state.selected = {
+          type: "point",
+          point: selectedPoint,
+        };
+
       $points.forEach((point, pointIndex) => {
         const handleIndex = point.handles.findIndex(
           (handle) =>
@@ -103,12 +128,13 @@
             CONSTANTS.point.handle.radius * (size / CONSTANTS.scale)
         );
         if (handleIndex !== -1) {
-          $state.selectedHandle = { point: pointIndex, handle: handleIndex };
-          foundHandle = true;
+          $state.selected = {
+            type: "handle",
+            point: pointIndex,
+            handle: handleIndex,
+          };
         }
       });
-
-      if (!foundHandle) $state.selectedHandle = null;
     });
 
     bindRemovable(canvas, "contextmenu", (e) => {
@@ -126,16 +152,8 @@
       }
     });
 
-    bindRemovable(canvas, "dblclick", () => {
-      if ($state.selected !== -1) {
-        const p = getWindowPoint($points[$state.selected], canvas);
-        p.x += 20;
-        // showMenu([{ label: "Delete", action: () => $points.splice($state.selected, 1) }], p);
-      }
-    });
-
     bindRemovable(canvas, "mousedown", () => {
-      if ($state.selected === -1 && !$state.selectedHandle) {
+      if (!$state.selected) {
         if ($state.editingMode === "pathPoint") {
           // spawn new point
           points.update((p) => {
@@ -150,27 +168,41 @@
           });
         } else if ($state.editingMode === "flagPoint") {
           // spawn new flag
+          const path = $state.generatedPoints.map((point) =>
+            transformPoint(point, canvas)
+          );
+          if (path.length < 2) return;
+
+          const m = transformPoint(mouse, canvas);
+          const nearestPoint = path.indexOf(path.reduce((a, b) => a.distance(m) < b.distance(m) ? a : b));
+          
+          $flagPoints = [...$flagPoints, {flags: {}, index: nearestPoint}];
         }
       } else {
-        if ($state.selectedHandle) {
-          const { point, handle } = $state.selectedHandle;
+        if ($state.selected.type === "handle") {
+          const { point, handle } = $state.selected;
           dragging = {
-            index: point,
-            handle: handle,
-            offset: mouse.subtract($points[point].add($points[point].handles[handle])),
-            dragged: false,
-          };
-        } else {
-          dragging = {
-            index: $state.selected,
-            handle: null,
-            offset: new Point(
-              mouse.x - $points[$state.selected].x,
-              mouse.y - $points[$state.selected].y
+            type: "handle",
+            data: {
+              point,
+              handle,
+            },
+            offset: mouse.subtract(
+              $points[point].add($points[point].handles[handle])
             ),
             dragged: false,
           };
-        }
+        } else if ($state.selected.type === "point") {
+          dragging = {
+            type: $state.selected.type,
+            data: $state.selected,
+            offset: new Point(
+              mouse.x - $points[$state.selected.point].x,
+              mouse.y - $points[$state.selected.point].y
+            ),
+            dragged: false,
+          };
+        } // add flag logic here
         0;
       }
     });
@@ -182,12 +214,8 @@
 
       if (dragging && !dragging.dragged) {
         console.log("eeee");
-        if (
-          $state.selected === $lastSelected.selected &&
-          $state.selectedHandle === $lastSelected.selectedHandle
-        ) {
-          $state.selected = -1;
-          $state.selectedHandle = null;
+        if (JSON.stringify($state.selected) === JSON.stringify($lastSelected)) {
+          $state.selected = null;
         }
       }
       updateLastSelected();
@@ -199,21 +227,24 @@
       if (dragging) {
         dragging.dragged = true;
         points.update((p) => {
-          dragging = dragging!;
-          if (dragging.handle === null) {
-            p[dragging.index].set(
-              new Point(mouse.x - dragging.offset.x, mouse.y - dragging.offset.y)
-            );
-          } else {
-            p[dragging.index].handles[dragging.handle].set(
+          if (!dragging) return p;
+          if (dragging.type === "point") {
+            p[dragging.data.point!].set(
               new Point(
-                mouse.x - dragging.offset.x - p[dragging.index].x,
-                mouse.y - dragging.offset.y - p[dragging.index].y
+                mouse.x - dragging.offset.x,
+                mouse.y - dragging.offset.y
+              )
+            );
+          } else if (dragging.type === "handle") {
+            p[dragging.data.point!].handles[dragging.data.handle!].set(
+              new Point(
+                mouse.x - dragging.offset.x - p[dragging.data.point!].x,
+                mouse.y - dragging.offset.y - p[dragging.data.point!].y
               )
             );
             if ($config.algorithm === "cubic-spline")
-              p[dragging.index].makeCollinear(dragging.handle);
-          }
+              p[dragging.data.point!].makeCollinear(dragging.data.handle!);
+          } // add flag logic here
           return p;
         });
       }
@@ -226,7 +257,7 @@
       )
         return;
       if (e.key === "Backspace" || e.key === "Delete") {
-        if ($state.selected === -1) {
+        if (!$state.selected || $state.selected.type !== "point") {
           points.update((p) => {
             p.pop();
             if (p.length > 0 && p.at(-1)!.handles.length > 1) {
@@ -238,39 +269,55 @@
           pushHistory();
         } else {
           points.update((p) => {
-            p.splice($state.selected, 1);
+            if (!$state.selected || $state.selected.type !== "point") return p;
+            p.splice($state.selected.point, 1);
             return p;
           });
-          $state.selected = -1;
+          $state.selected = null;
 
           pushHistory();
         }
       } else if (e.key === "Escape") {
-        $state.selected = -1;
-        $state.selectedHandle = null;
+        $state.selected = null;
         updateLastSelected();
-      } else if (e.key === "ArrowLeft" && $state.selected !== -1) {
+      } else if (
+        e.key === "ArrowLeft" &&
+        $state.selected &&
+        $state.selected.type === "point"
+      ) {
         const amt = e.shiftKey ? 0.2 : 2;
         points.update((p) => {
-          p[$state.selected].x -= amt;
+          p[($state.selected as PointSelection)?.point].x -= amt;
           return p;
         });
-      } else if (e.key === "ArrowRight" && $state.selected !== -1) {
+      } else if (
+        e.key === "ArrowRight" &&
+        $state.selected &&
+        $state.selected.type === "point"
+      ) {
         const amt = e.shiftKey ? 0.2 : 2;
         points.update((p) => {
-          p[$state.selected].x += amt;
+          p[($state.selected as PointSelection)?.point].x += amt;
           return p;
         });
-      } else if (e.key === "ArrowUp" && $state.selected !== -1) {
+      } else if (
+        e.key === "ArrowUp" &&
+        $state.selected &&
+        $state.selected.type === "point"
+      ) {
         const amt = e.shiftKey ? 0.2 : 2;
         points.update((p) => {
-          p[$state.selected].y += amt;
+          p[($state.selected as PointSelection)?.point].y += amt;
           return p;
         });
-      } else if (e.key === "ArrowDown" && $state.selected !== -1) {
+      } else if (
+        e.key === "ArrowDown" &&
+        $state.selected &&
+        $state.selected.type === "point"
+      ) {
         const amt = e.shiftKey ? 0.2 : 2;
         points.update((p) => {
-          p[$state.selected].y -= amt;
+          p[($state.selected as PointSelection)?.point].y -= amt;
           return p;
         });
       }

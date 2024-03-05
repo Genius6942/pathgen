@@ -90,7 +90,8 @@ export const drawHandles = (ctx: CanvasRenderingContext2D, mouse: Point) => {
   const m = transformPoint(mouse, ctx.canvas);
 
   get(points).forEach((point, pointIndex) => {
-    const selectedHandle = get(state).selectedHandle;
+    const selection = get(state).selected;
+    const selectedHandle = selection && selection.type ==='handle' ? selection : null;
     point.handles.forEach((handle, handleIndex) => {
       const h = transformPoint(handle.add(point), ctx.canvas);
       ctx.beginPath();
@@ -112,6 +113,7 @@ export const drawHandles = (ctx: CanvasRenderingContext2D, mouse: Point) => {
 
 export const drawPoints = (ctx: CanvasRenderingContext2D, mouse: Point) => {
   const scale = ctx.canvas.height / CONSTANTS.scale;
+  const selection = get(state).selected;
   get(points).forEach((point, index) => {
     const p = transformPoint(point, ctx.canvas);
     const m = transformPoint(mouse, ctx.canvas);
@@ -120,7 +122,7 @@ export const drawPoints = (ctx: CanvasRenderingContext2D, mouse: Point) => {
     ctx.lineWidth = CONSTANTS.point.border.thickness * scale;
     ctx.strokeStyle = CONSTANTS.point.border.color;
     ctx.fillStyle =
-      get(state).selected === index
+      selection && selection.type === 'point' && selection.point === index
         ? CONSTANTS.point.selected
         : p.distance(m) <= CONSTANTS.point.radius * scale
         ? CONSTANTS.point.hover

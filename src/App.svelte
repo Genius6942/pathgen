@@ -16,7 +16,7 @@
   let newFlagName = "";
   let newFlagType: "boolean" | "number" = "boolean";
 
-  $: point = $state.selected === -1 ? null : $points[$state.selected];
+  $: point = $state.selected && $state.selected.type === 'point' ? $points[$state.selected.point]: null;
 </script>
 
 <main class="h-screen flex flex-col">
@@ -31,12 +31,15 @@
     >
       <div class="flex flex-col gap-2">
         <!-- POINT DESCRIPTOR -->
-        <h1 class="text-3xl w-full pb-2 border-b-2 border-b-white">
+        <h1 class="text-3xl w-full pb-2 border-b-2 border-b-white flex items-center">
           {#if point}
             Point at ({point.x.toFixed(2)}, {point.y.toFixed(2)})
           {:else}
             No point selected
           {/if}
+          <div class="ml-auto text-xl">
+            <!-- {#if } -->
+          </div>
         </h1>
 
         <!-- PATH CONFIG -->
@@ -212,7 +215,7 @@
       </div>
     </div>
   </div>
-  <!-- menu -->
+  <!-- menu (not in use) -->
   <div
     class="flex-col items-stretch absolute hidden border-white rounded-2xl border-2 -translate-y-1/2 gap-2"
     id="menu"
@@ -226,6 +229,6 @@
       href="https://haelp.dev"
       class="ml-2 underline"
       target="_blank">Joshua Liu</a
-    >, Brandon Ni, Michael Han {new Date().getFullYear()}
+    >, Brandon Ni{new Date().getFullYear()}
   </div>
 </main>

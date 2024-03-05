@@ -11,7 +11,7 @@ import {
   PathPoint,
   Point,
   type PathPointExport,
-	type PathPointOptions,
+  type PathPointOptions,
   type PointExport,
 } from ".";
 import type { Background } from "./background";
@@ -58,17 +58,16 @@ export function customWritable<T>(initialValue: T): Writable<T> & {
 export const points = writable<PathPoint[]>([]);
 
 export type FlagPoint = {
-  pathIndex: number;
-  pointIndex: number;
+  index: number;
   flags: PathPointOptions["flags"];
 };
 
 export const flagPoints = writable<FlagPoint[]>([]);
 export const addFlagPoint = (point: FlagPoint) => {
-	flagPoints.update((f) => {
-		f.push(point);
-		return f;
-	});
+  flagPoints.update((f) => {
+    f.push(point);
+    return f;
+  });
 };
 
 export interface PathConfig {
@@ -94,35 +93,40 @@ config.subscribe((v) => {
 
 export type EditingMode = "pathPoint" | "flagPoint";
 
+export interface PointSelection {
+  type: "point";
+  point: number;
+}
+export interface HandleSelection {
+  type: "handle";
+  point: number;
+  handle: number;
+}
+export interface FlagSelection {
+  type: "flag";
+  flag: number;
+}
+
+export type Selection = PointSelection | HandleSelection | FlagSelection;
+
 export interface AppState {
-  selected: number;
-  selectedHandle: { handle: number; point: number } | null;
+  selected: Selection | null;
   generatedPoints: GeneratedPoint[];
   fileHandle: FileSystemFileHandle | null;
   editingMode: EditingMode;
 }
 export const state = writable<AppState>({
-  selected: -1,
-  selectedHandle: null,
+  selected: null,
   generatedPoints: [],
   fileHandle: null,
   editingMode: "pathPoint",
 });
 
-export const lastSelected = writable<{
-  selected: number;
-  selectedHandle: { handle: number; point: number } | null;
-}>({
-  selected: -1,
-  selectedHandle: null,
-});
+export const lastSelected = writable<Selection | null>(null);
 
 export const updateLastSelected = () => {
   const s = get(state);
-  lastSelected.set({
-    selected: s.selected,
-    selectedHandle: JSON.parse(JSON.stringify(s.selectedHandle)),
-  });
+  lastSelected.set(JSON.parse(JSON.stringify(s.selected)));
 };
 
 points.subscribe((p) => {
@@ -180,6 +184,7 @@ const importData = (data: any) => {
         (point: any) =>
           new PathPoint(point.x, point.y, {
             flags: point.flags,
+            handles: point.handles,
           })
       )
     );
@@ -267,14 +272,25 @@ export const load = () => {
   });
 };
 
+export const saveState = writable(-1);
+
+const write =
+  (newFile = false) =>
+  () => {
+    fsHandler.write(JSON.stringify(exportData()), newFile);
+    saveState.set(-1);
+  };
+
 export const save = () => {
-  const data = exportData();
-  fsHandler.write(JSON.stringify(data));
+  const cur = get(saveState);
+  if (cur >= 0) clearTimeout(cur);
+  saveState.set(setTimeout(write(false), CONSTANTS.saveTimeout));
 };
 
 export const saveAs = () => {
-  const data = exportData();
-  fsHandler.write(JSON.stringify(data), true);
+  const cur = get(saveState);
+  if (cur >= 0) clearTimeout(cur);
+  saveState.set(setTimeout(write(true), CONSTANTS.saveTimeout));
 };
 
 points.subscribe(() => {
@@ -285,8 +301,13 @@ config.subscribe(() => {
   if (get(config).autosave) save();
 });
 
-export const addFlag = (flag: string, type: "boolean" | "number", overWrite = false) => {
-  if (flag in get(config).flags && !overWrite) throw new Error("Flag already exists");
+export const addFlag = (
+  flag: string,
+  type: "boolean" | "number",
+  overWrite = false
+) => {
+  if (flag in get(config).flags && !overWrite)
+    throw new Error("Flag already exists");
   config.update((c) => {
     c.flags[flag] = type;
     return c;

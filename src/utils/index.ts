@@ -44,5 +44,7 @@ export const CONSTANTS = {
     error: "#FF0000",
     thickness: 0.2,
   },
+
+  saveTimeout: 1000,
   version: "0.1.0",
 };
