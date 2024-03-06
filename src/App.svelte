@@ -191,34 +191,53 @@
             (No flags set)
           {/if}
           {#each Object.keys($config.flags).map( (_, i) => ({ key: Object.keys($config.flags)[i], type: $config.flags[Object.keys($config.flags)[i]] }) ) as flag}
-            {#if flag.type === "boolean"}
-              <div class="flex items-center gap-3">
-                <label class="items-center cursor-pointer relative">
-                  <input
-                    type="checkbox"
-                    value=""
-                    class="toggle"
-                    bind:checked={point.flagsAny[flag.key]}
-                  />
-
-                  <span
-                    class="ms-3 text-sm font-medium text-gray-900 dark:text-gray-300"
-                  >
-                    {flag.key}
-                  </span>
-                </label>
-              </div>
-            {:else}
-              <div class="flex items-center gap-3">
-                <label for={flag.key}>{flag.key}</label>
+            <div class="flex items-center gap-3">
+              <label class="items-center cursor-pointer relative">
                 <input
-                  type="number"
-                  id={flag.key}
-                  class="bg-transparent border-2 border-white border-dashed rounded-2xl px-[2px] py-[1px] text-center outline-none focus:border-solid transition-all duration-200 ease-in-out"
-                  bind:value={point.flagsAny[flag.key]}
+                  type="checkbox"
+                  value=""
+                  class="toggle"
+                  on:change={(e) => {
+                    // @ts-ignore
+                    if (e.target.checked && point) {
+                      point.flagsAny[flag.key] =
+                        flag.type === "boolean" ? false : 0;
+                    } else if (point) {
+                      delete point.flagsAny[flag.key];
+                      point = point;
+                    }
+                  }}
                 />
-              </div>
-            {/if}
+
+                <span class="ms-3 text-sm font-medium text-gray-300">
+                  Enable {flag.key}
+                </span>
+              </label>
+              {#if flag.key in point.flags}
+                {#if flag.type === "boolean"}
+                  <label class="items-center cursor-pointer relative">
+                    <input
+                      type="checkbox"
+                      value=""
+                      class="toggle"
+                      bind:checked={point.flagsAny[flag.key]}
+                    />
+
+                    <span class="ms-3 text-sm font-medium text-gray-300">
+                      {flag.key}
+                    </span>
+                  </label>
+                {:else}
+                  <label for={flag.key}>{flag.key}</label>
+                  <input
+                    type="number"
+                    id={flag.key}
+                    class="bg-transparent border-2 border-white border-dashed rounded-2xl px-[2px] py-[1px] text-center outline-none focus:border-solid transition-all duration-200 ease-in-out"
+                    bind:value={point.flagsAny[flag.key]}
+                  />
+                {/if}
+              {/if}
+            </div>
           {/each}
         {/if}
       </div>
