@@ -75,7 +75,7 @@
       mouse.x = ((x - canvas.width / 2) / (canvas.width / 2)) * CONSTANTS.scale;
       mouse.y = (-(y - canvas.height / 2) / (canvas.height / 2)) * CONSTANTS.scale;
 
-			 if (dragging) {
+      if (dragging) {
         dragging.dragged = true;
         points.update((p) => {
           if (!dragging) return p;
@@ -259,7 +259,6 @@
       dragging = null;
     });
 
-
     bindRemovable(document, "keydown", (e) => {
       if (
         (e.target as HTMLElement).tagName.toLowerCase() === "input" ||
@@ -267,7 +266,7 @@
       )
         return;
       if (e.key === "Backspace" || e.key === "Delete") {
-        if (!$state.selected || $state.selected.type !== "point") {
+        if (!$state.selected || !["point", "flag"].includes($state.selected.type)) {
           points.update((p) => {
             p.pop();
             if (p.length > 0 && p.at(-1)!.handles.length > 1) {
@@ -278,14 +277,24 @@
 
           pushHistory();
         } else {
-          points.update((p) => {
-            if (!$state.selected || $state.selected.type !== "point") return p;
-            p.splice($state.selected.point, 1);
-            return p;
-          });
-          $state.selected = null;
+          if ($state.selected.type === "flag") {
+            flagPoints.update((p) => {
+              if ($state.selected?.type !== "flag") return p;
+              p.splice($state.selected.flag, 1);
+              return p;
+            });
+            $state.selected = null;
+            pushHistory();
+          } else {
+            points.update((p) => {
+              if ($state.selected?.type !== "point") return p;
+              p.splice($state.selected.point, 1);
+              return p;
+            });
+            $state.selected = null;
 
-          pushHistory();
+            pushHistory();
+          }
         }
       } else if (e.key === "Escape") {
         $state.selected = null;

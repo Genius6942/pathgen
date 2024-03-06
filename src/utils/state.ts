@@ -65,6 +65,7 @@ export type FlagPoint = {
 
 export const flagPoints = writable<FlagPoint[]>([]);
 export const addFlagPoint = (point: number) => {
+  if (get(points).length < 2) return;
   flagPoints.update((f) => {
     f.push({
       index: point,
@@ -141,7 +142,11 @@ export const updateLastSelected = () => {
 };
 
 points.subscribe((p) => {
-  if (p.length < 2) return state.update((s) => ({ ...s, generatedPoints: [] }));
+  if (p.length < 2) {
+    flagPoints.set([]);
+    state.update((s) => ({ ...s, generatedPoints: [], editingMode: "pathPoint" }));
+    return;
+  }
   const method = get(config).algorithm;
   const algorithm = pathAlgorithms[method];
   const waypoints: PathPoint[] = p.map((point) => point.clone());
@@ -153,6 +158,7 @@ points.subscribe((p) => {
       flagPoints.update((f) => {
         return f.filter((flagPoint) => flagPoint.index < s.generatedPoints.length);
       });
+
       return s;
     } catch (e) {
       console.error("shit e:", JSON.parse(JSON.stringify(p.map((p) => p.export()))));
@@ -228,6 +234,7 @@ const importData = (data: any) => {
   flagPoints.set(data.flagPoints);
 
   config.set(data.config);
+	clearHistory();
 };
 
 export interface HistoryState {
