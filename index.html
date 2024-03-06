@@ -7,36 +7,37 @@
     <title>Vex Path Generator</title>
   </head>
   <body class="border-white text-white bg-slate-800">
-		<!-- BEGIN ERUDA -->
+    <!-- BEGIN ERUDA -->
     <script src="https://cdn.jsdelivr.net/npm/eruda"></script>
     <script>
-      try {
-        eruda.init({
-          defaults: {
-            displaySize: 30,
-            theme: "Atom One Dark",
-            transparency: 1,
-          },
-        });
-        if (localStorage.getItem("eruda-auto-show") === "1") eruda.show();
-        window.addEventListener("keydown", (e) => {
-          const { key, ctrlKey } = e;
-          if (key === "e" && ctrlKey) {
-            e.preventDefault();
-            if (localStorage.getItem("eruda-auto-show") === "1") {
-              localStorage.setItem("eruda-auto-show", "0");
-              eruda.hide();
-            } else {
-              localStorage.setItem("eruda-auto-show", "1");
-              eruda.show();
+      if (localStorage.getItem("dev-tools") === "1")
+        try {
+          eruda.init({
+            defaults: {
+              displaySize: 30,
+              theme: "Atom One Dark",
+              transparency: 1,
+            },
+          });
+          if (localStorage.getItem("eruda-auto-show") === "1") eruda.show();
+          window.addEventListener("keydown", (e) => {
+            const { key, ctrlKey } = e;
+            if (key === "e" && ctrlKey) {
+              e.preventDefault();
+              if (localStorage.getItem("eruda-auto-show") === "1") {
+                localStorage.setItem("eruda-auto-show", "0");
+                eruda.hide();
+              } else {
+                localStorage.setItem("eruda-auto-show", "1");
+                eruda.show();
+              }
             }
-          }
-        });
-      } catch (e) {
-        alert(e);
-      }
+          });
+        } catch (e) {
+          alert(e);
+        }
     </script>
-		<!-- END ERUDA -->
+    <!-- END ERUDA -->
     <div id="app"></div>
     <script type="module" src="/src/main.ts"></script>
   </body>

@@ -2,12 +2,17 @@ import { Point } from "$utils";
 import { Bernstein } from "./bernstein";
 
 export class BezierSpline {
-	points: Point[];
-	sectioned: Bernstein[];
-	spline: [number, Point, number][];
-	degree: number;
-	
-  constructor(points: Point[], sectioned: Bernstein[] = [], spline: typeof BezierSpline['prototype']['spline'] = [], degree = 3) {
+  points: Point[];
+  sectioned: Bernstein[];
+  spline: [number, Point, number][];
+  degree: number;
+
+  constructor(
+    points: Point[],
+    sectioned: Bernstein[] = [],
+    spline: (typeof BezierSpline)["prototype"]["spline"] = [],
+    degree = 3
+  ) {
     this.points = points;
     this.sectioned = sectioned;
     this.spline = spline;
@@ -101,7 +106,9 @@ export class BezierSpline {
     for (let i = 0; i < numPoints + 1; i++) {
       const distAtPoint = i * distBetween;
       const t = this.getT(distAtPoint);
-      const pt = this.evaluate(t!);
+      const pt = this.evaluate(
+        typeof t === "number" ? t : (this.points.length + 2) / 3 - 1
+      );
       path.push([t!, pt, 0]);
     }
     this.spline = path;
