@@ -141,7 +141,6 @@ export const updateLastSelected = () => {
 };
 
 points.subscribe((p) => {
-  console.log("update!!!");
   if (p.length < 2) return state.update((s) => ({ ...s, generatedPoints: [] }));
   const method = get(config).algorithm;
   const algorithm = pathAlgorithms[method];
