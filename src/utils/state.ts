@@ -156,8 +156,7 @@ points.subscribe((p) => {
       });
       return s;
     } catch (e) {
-      console.log("shit e");
-      console.error(e);
+      console.error("shit e:", JSON.parse(JSON.stringify(p.map(p => p.export()))));
       return s;
     }
   });
