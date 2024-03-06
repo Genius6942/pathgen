@@ -3,6 +3,7 @@ import { CONSTANTS, Point, type PointExport } from ".";
 export interface PathPointOptions {
   flags?: { [key: string]: number | boolean };
   handles?: { x: number; y: number }[];
+  reverse?: boolean;
 }
 
 export interface PathPointExport {
@@ -10,17 +11,20 @@ export interface PathPointExport {
   y: number;
   flags: NonNullable<PathPointOptions["flags"]>;
   handles: { x: number; y: number }[];
+  reverse: boolean;
 }
 
 export class PathPoint extends Point {
   flags: NonNullable<PathPointOptions["flags"]>;
   handles: Point[];
+  private _reverse = false;
 
   constructor(x: number, y: number, options: PathPointOptions = {}) {
     super(x, y);
     this.flags = options.flags || {};
     const handles = options.handles || [];
     this.handles = handles.map((handle) => new Point(handle.x, handle.y));
+    this.reverse = !!options.reverse;
   }
 
   get flagsAny() {
@@ -29,6 +33,15 @@ export class PathPoint extends Point {
 
   set flagsAny(val: any) {
     this.flags = val;
+  }
+
+  get reverse() {
+    return this._reverse;
+  }
+
+  set reverse(value: boolean) {
+    this._reverse = value;
+    if (this.handles.length >= 2) this.makeCollinear(0);
   }
 
   /**
@@ -45,8 +58,10 @@ export class PathPoint extends Point {
       const distance = handle.distance();
       const ratio = distance / anchorDistance;
 
-      handle.x = -anchor.x * ratio;
-      handle.y = -anchor.y * ratio;
+      const multiplier = this.reverse ? 1 : -1;
+
+      handle.x = multiplier * anchor.x * ratio;
+      handle.y = multiplier * anchor.y * ratio;
     });
   }
 
@@ -54,6 +69,7 @@ export class PathPoint extends Point {
     return new PathPoint(this.x, this.y, {
       flags: this.flags,
       handles: this.handles.map((handle) => ({ x: handle.x, y: handle.y })),
+      reverse: this.reverse,
     }) as this;
   }
 
@@ -63,6 +79,7 @@ export class PathPoint extends Point {
       y: this.y,
       flags: JSON.parse(JSON.stringify(this.flags)),
       handles: this.handles.map((handle) => ({ x: handle.x, y: handle.y })),
+      reverse: this.reverse,
     };
   }
 
@@ -70,7 +87,7 @@ export class PathPoint extends Point {
     return new PathPoint(point.x, point.y, {
       flags: point.flags,
       handles: point.handles,
+      reverse: point.reverse,
     });
   }
 }
-

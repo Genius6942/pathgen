@@ -24,6 +24,11 @@
       : $state.selected?.type === "flag"
         ? $flagPoints[$state.selected.flag]
         : null;
+
+  $: pathPoint =
+    $state.selected && $state.selected.type === "point"
+      ? $points[$state.selected.point]
+      : null;
 </script>
 
 <main class="h-screen flex flex-col">
@@ -38,7 +43,9 @@
     >
       <div class="flex flex-col gap-2">
         <!-- POINT DESCRIPTOR -->
-        <h1 class="text-3xl w-full pb-2 border-b-2 border-b-white flex items-center">
+        <h1
+          class="text-3xl w-full pb-2 border-b-2 border-b-white flex items-center"
+        >
           {#if point}
             {#if point instanceof Point}
               Point at ({point.x.toFixed(2)}, {point.y.toFixed(2)})
@@ -109,6 +116,18 @@
           </select>
         </label>
 
+        {#if pathPoint}
+          <h1 class="text-3xl mt-3">Point Config</h1>
+          <label class="relative">
+            <input
+              type="checkbox"
+              bind:checked={pathPoint.reverse}
+              class="toggle"
+            />
+            Reverse here
+          </label>
+        {/if}
+
         <h1 class="text-3xl mt-3">Flags</h1>
 
         {#if !point}
@@ -116,8 +135,9 @@
             .fill(null)
             .map( (_, i) => ({ key: Object.keys($config.flags)[i], type: $config.flags[Object.keys($config.flags)[i]] }) ) as flag}
             <div class="flex items-center gap-3">
-              <button class="button py-[2px]" on:click={() => removeFlag(flag.key)}
-                >Delete</button
+              <button
+                class="button py-[2px]"
+                on:click={() => removeFlag(flag.key)}>Delete</button
               >
               <div class="h-7 border-white border-r-2" />
               {flag.key}: {flag.type}
@@ -173,19 +193,17 @@
           {#each Object.keys($config.flags).map( (_, i) => ({ key: Object.keys($config.flags)[i], type: $config.flags[Object.keys($config.flags)[i]] }) ) as flag}
             {#if flag.type === "boolean"}
               <div class="flex items-center gap-3">
-                <label class="inline-flex items-center cursor-pointer">
+                <label class="items-center cursor-pointer relative">
                   <input
                     type="checkbox"
                     value=""
-                    class="sr-only peer"
+                    class="toggle"
                     bind:checked={point.flagsAny[flag.key]}
                   />
 
-                  <div
-                    class="relative w-10 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-[110%] after:content-[''] after:absolute after:top-[4px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600"
-                  ></div>
-
-                  <span class="ms-3 text-sm font-medium text-gray-900 dark:text-gray-300">
+                  <span
+                    class="ms-3 text-sm font-medium text-gray-900 dark:text-gray-300"
+                  >
                     {flag.key}
                   </span>
                 </label>
@@ -221,7 +239,8 @@
             </label>
             <button id="import" class="button" on:click={load}>Import</button>
             <button id="save" class="button" on:click={save}>Save</button>
-            <button id="saveas" class="button" on:click={saveAs}>Save As</button>
+            <button id="saveas" class="button" on:click={saveAs}>Save As</button
+            >
           </div>
         </div>
       </div>
@@ -234,9 +253,13 @@
   ></div>
 
   <!-- footer -->
-  <div class="h-12 bg-slate-900 text-white flex items-center text-xl px-5 font-mono">
-    Copyright &COPY; <a href="https://haelp.dev" class="ml-2 underline" target="_blank"
-      >Joshua Liu</a
+  <div
+    class="h-12 bg-slate-900 text-white flex items-center text-xl px-5 font-mono"
+  >
+    Copyright &COPY; <a
+      href="https://haelp.dev"
+      class="ml-2 underline"
+      target="_blank">Joshua Liu</a
     >, Brandon Ni {new Date().getFullYear()}
     <span class="ml-auto">v{CONSTANTS.version}</span>
   </div>
