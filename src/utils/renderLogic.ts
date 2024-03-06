@@ -1,6 +1,6 @@
 import { get } from "svelte/store";
 
-import { CONSTANTS, Point, config, points, state } from ".";
+import { CONSTANTS, Point, config, flagPoints, points, state } from ".";
 
 // Background shit
 import { backgrounds, type Background } from "./background";
@@ -68,6 +68,35 @@ export const drawPath = (ctx: CanvasRenderingContext2D) => {
   }
 };
 
+export const drawFlagPoints = (ctx: CanvasRenderingContext2D, mouse: Point) => {
+  const scale = ctx.canvas.height / CONSTANTS.scale;
+  const selection = get(state).selected;
+  const generatedPath = get(state).generatedPoints;
+	if (generatedPath.length < 2) return;
+  get(flagPoints)
+    .map((point) => {
+      const pathPoint = generatedPath[Math.min(point.index, generatedPath.length - 1)];
+      return new Point(pathPoint.x, pathPoint.y);
+    })
+    .forEach((point, index) => {
+      const p = transformPoint(point, ctx.canvas);
+      const m = transformPoint(mouse, ctx.canvas);
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, CONSTANTS.flag.radius * scale, 0, Math.PI * 2);
+      ctx.lineWidth = CONSTANTS.flag.border.thickness * scale;
+      ctx.strokeStyle = CONSTANTS.flag.border.color;
+      ctx.fillStyle =
+        selection && selection.type === "flag" && selection.flag === index
+          ? CONSTANTS.flag.selected
+          : p.distance(m) <= CONSTANTS.flag.radius * scale
+          ? CONSTANTS.flag.hover
+          : CONSTANTS.flag.color;
+
+      ctx.fill();
+      ctx.stroke();
+    });
+};
+
 export const drawHandleLinks = (ctx: CanvasRenderingContext2D) => {
   const scale = ctx.canvas.height / CONSTANTS.scale;
 
@@ -91,7 +120,7 @@ export const drawHandles = (ctx: CanvasRenderingContext2D, mouse: Point) => {
 
   get(points).forEach((point, pointIndex) => {
     const selection = get(state).selected;
-    const selectedHandle = selection && selection.type ==='handle' ? selection : null;
+    const selectedHandle = selection && selection.type === "handle" ? selection : null;
     point.handles.forEach((handle, handleIndex) => {
       const h = transformPoint(handle.add(point), ctx.canvas);
       ctx.beginPath();
@@ -122,7 +151,7 @@ export const drawPoints = (ctx: CanvasRenderingContext2D, mouse: Point) => {
     ctx.lineWidth = CONSTANTS.point.border.thickness * scale;
     ctx.strokeStyle = CONSTANTS.point.border.color;
     ctx.fillStyle =
-      selection && selection.type === 'point' && selection.point === index
+      selection && selection.type === "point" && selection.point === index
         ? CONSTANTS.point.selected
         : p.distance(m) <= CONSTANTS.point.radius * scale
         ? CONSTANTS.point.hover
@@ -176,6 +205,7 @@ export const render = (ctx: CanvasRenderingContext2D, mouse: Point) => {
   drawBackground(ctx);
   drawBoundaries(ctx);
   drawPath(ctx);
+  drawFlagPoints(ctx, mouse);
   drawHandleLinks(ctx);
   drawHandles(ctx, mouse);
   if (get(state).editingMode === "flagPoint") renderNearestPoint(ctx, mouse);

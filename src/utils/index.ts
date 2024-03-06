@@ -44,7 +44,17 @@ export const CONSTANTS = {
     error: "#FF0000",
     thickness: 0.2,
   },
+  flag: {
+    color: "#B39DDB",
+    hover: "#C4AEEC",
+    selected: "#673AB7",
+    radius: 0.9,
+    border: {
+      color: "white",
+      thickness: 0.1,
+    },
+  },
 
   saveTimeout: 1000,
-  version: "0.1.0",
+  version: "0.2.0",
 };

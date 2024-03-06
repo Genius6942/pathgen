@@ -59,13 +59,24 @@ export const points = writable<PathPoint[]>([]);
 
 export type FlagPoint = {
   index: number;
-  flags: PathPointOptions["flags"];
+  flags: NonNullable<PathPointOptions["flags"]>;
+  flagsAny: { [key: string]: any };
 };
 
 export const flagPoints = writable<FlagPoint[]>([]);
-export const addFlagPoint = (point: FlagPoint) => {
+export const addFlagPoint = (point: number) => {
   flagPoints.update((f) => {
-    f.push(point);
+    f.push({
+      index: point,
+      flags: {},
+      get flagsAny() {
+        return this.flags as { [key: string]: any };
+      },
+
+      set flagsAny(val: any) {
+        this.flags = val;
+      },
+    });
     return f;
   });
 };
@@ -130,6 +141,7 @@ export const updateLastSelected = () => {
 };
 
 points.subscribe((p) => {
+  console.log("update!!!");
   if (p.length < 2) return state.update((s) => ({ ...s, generatedPoints: [] }));
   const method = get(config).algorithm;
   const algorithm = pathAlgorithms[method];
@@ -138,30 +150,59 @@ points.subscribe((p) => {
   state.update((s) => {
     try {
       s.generatedPoints = algorithm(waypoints);
+
+      flagPoints.update((f) => {
+        return f.filter((flagPoint) => flagPoint.index < s.generatedPoints.length);
+      });
       return s;
-    } catch {
+    } catch (e) {
+      console.log("shit e");
+      console.error(e);
       return s;
     }
   });
 });
 
 config.subscribe(() => {
-  const p = get(points);
-  if (p.length < 2) return state.update((s) => ({ ...s, generatedPoints: [] }));
-  const method = get(config).algorithm;
-  const algorithm = pathAlgorithms[method];
-  const waypoints: PathPoint[] = p.map((point) => point.clone());
+  try {
+    const p = get(points);
+    if (p.length < 2) return state.update((s) => ({ ...s, generatedPoints: [] }));
+    const method = get(config).algorithm;
+    const algorithm = pathAlgorithms[method];
+    const waypoints: PathPoint[] = p.map((point) => point.clone());
 
-  state.update((s) => {
-    s.generatedPoints = algorithm(waypoints);
-    return s;
-  });
+    state.update((s) => {
+      s.generatedPoints = algorithm(waypoints);
+      return s;
+    });
+  } catch (e) {
+    console.log("shit e");
+    console.error(e);
+  }
 });
 
 const exportData = () => {
+  const rawPoints = get(state).generatedPoints.map((point) => point.export());
+  const generated = rawPoints.map((point) => ({ ...point, flags: {} }));
+  // add flags from points
+  get(points).forEach((point) => {
+    const generatedIndex = generated.findIndex((p) => p.x === point.x && p.y === point.y);
+    if (generatedIndex !== -1) {
+      generated[generatedIndex].flags = point.flags;
+    }
+  });
+
+  get(flagPoints).forEach((flagPoint) => {
+    if (flagPoint.index < generated.length) {
+      generated[flagPoint.index].flags = flagPoint.flags;
+    }
+  });
+
   return {
     config: get(config),
     points: get(points).map((point) => point.export()),
+    flagPoints: get(flagPoints),
+    generated,
     version: CONSTANTS.version,
   };
 };
@@ -176,26 +217,23 @@ const importData = (data: any) => {
     )
   )
     return;
-  points.update((p) => {
-    p.splice(
-      0,
-      p.length,
-      ...data.points.map(
-        (point: any) =>
-          new PathPoint(point.x, point.y, {
-            flags: point.flags,
-            handles: point.handles,
-          })
-      )
-    );
-    return p;
-  });
+  points.set(
+    data.points.map(
+      (point: any) =>
+        new PathPoint(point.x, point.y, {
+          flags: point.flags,
+          handles: point.handles,
+        })
+    )
+  );
+  flagPoints.set(data.flagPoints);
 
   config.set(data.config);
 };
 
 export interface HistoryState {
   points: PathPointExport[];
+  flagPoints: FlagPoint[];
   state: Omit<AppState, "generatedPoints"> & {
     generatedPoints: GeneratedPointExport[];
   };
@@ -212,13 +250,14 @@ export const undo = (extra = 0) => {
     const last = h[h.length - 1];
     if (last) {
       points.set(last.points.map((point) => PathPoint.from(point)));
-      state.set({
-        ...last.state,
-        generatedPoints: last.state.generatedPoints.map((point) =>
-          GeneratedPoint.from(point)
-        ),
-      });
+      // state.set({
+      //   ...last.state,
+      //   generatedPoints: last.state.generatedPoints.map((point) =>
+      //     GeneratedPoint.from(point)
+      //   ),
+      // });
       config.set(last.config);
+      flagPoints.set(last.flagPoints);
     } else {
       history.set([get(initialState)]);
     }
@@ -238,6 +277,7 @@ export const pushHistory = (isInitial = false) => {
   if (isInitial) {
     initialState.set({
       points: p.map((point) => point.export()),
+      flagPoints: get(flagPoints),
       state: {
         ...JSON.parse(JSON.stringify(s)),
         generatedPoints: s.generatedPoints.map((point) => point.export()),
@@ -249,6 +289,7 @@ export const pushHistory = (isInitial = false) => {
   history.update((h) => {
     h.push({
       points: p.map((point) => point.export()),
+      flagPoints: get(flagPoints),
       state: {
         ...JSON.parse(JSON.stringify(s)),
         generatedPoints: s.generatedPoints.map((point) => point.export()),
@@ -301,13 +342,8 @@ config.subscribe(() => {
   if (get(config).autosave) save();
 });
 
-export const addFlag = (
-  flag: string,
-  type: "boolean" | "number",
-  overWrite = false
-) => {
-  if (flag in get(config).flags && !overWrite)
-    throw new Error("Flag already exists");
+export const addFlag = (flag: string, type: "boolean" | "number", overWrite = false) => {
+  if (flag in get(config).flags && !overWrite) throw new Error("Flag already exists");
   config.update((c) => {
     c.flags[flag] = type;
     return c;
