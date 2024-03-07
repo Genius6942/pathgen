@@ -137,9 +137,13 @@ export interface AppState {
   fileHandle: FileSystemFileHandle | null;
   editingMode: EditingMode;
   visible: {
+		points: boolean;
     handles: boolean;
     flags: boolean;
+
+		// other stuff related to rendering
 		highlightIndex: number;
+		coloredPath: boolean;
   };
 }
 export const state = writable<AppState>({
@@ -148,9 +152,11 @@ export const state = writable<AppState>({
   fileHandle: null,
   editingMode: "pathPoint",
   visible: {
+		points: true,
     handles: true,
     flags: true,
 		highlightIndex: -1,
+		coloredPath: true,
   },
 });
 

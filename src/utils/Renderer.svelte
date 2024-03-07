@@ -118,19 +118,20 @@
       // selection stuff
       const m = transformPoint(mouse, canvas);
       $state.selected = null;
-      const selectedPoint = $points.findIndex(
-        (point) =>
-          transformPoint(point, canvas).distance(m) <=
-          CONSTANTS.point.radius * (size / CONSTANTS.scale)
-      );
+      if ($state.visible.points) {
+        const selectedPoint = $points.findIndex(
+          (point) =>
+            transformPoint(point, canvas).distance(m) <=
+            CONSTANTS.point.radius * (size / CONSTANTS.scale)
+        );
 
-      if (selectedPoint >= 0) {
-        $state.selected = {
-          type: "point",
-          point: selectedPoint,
-        } as Selection;
+        if (selectedPoint >= 0) {
+          $state.selected = {
+            type: "point",
+            point: selectedPoint,
+          } as Selection;
+        }
       }
-
       if ($state.visible.handles) {
         $points.forEach((point, pointIndex) => {
           const handleIndex = point.handles.findIndex(

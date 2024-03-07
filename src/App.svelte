@@ -120,7 +120,7 @@
                   bind:value={$config.bot.maxVelocity}
                 />
               </label>
-							<div class="divider"></div>
+              <div class="divider"></div>
               <label>
                 Max acceleration:
                 <input
@@ -145,24 +145,43 @@
             </label>
 
             <div class="flex gap-3 relative items-center">
+              Show:
+
+              <label class="relative">
+                <input
+                  type="checkbox"
+                  bind:checked={$state.visible.points}
+                  class="toggle"
+                />
+                Points
+              </label>
+              <div class="divider" />
               <label class="relative">
                 <input
                   type="checkbox"
                   bind:checked={$state.visible.handles}
                   class="toggle"
                 />
-                Show handles
+                Handles
               </label>
-              <div class="border-r-2 border-white h-7"></div>
+              <div class="divider" />
               <label class="relative">
                 <input
                   type="checkbox"
                   bind:checked={$state.visible.flags}
                   class="toggle"
                 />
-                Show flags
+                Flags
               </label>
             </div>
+            <label class="relative">
+              <input
+                type="checkbox"
+                bind:checked={$state.visible.coloredPath}
+                class="toggle"
+              />
+              Colored Path
+            </label>
 
             {#if pathPoint}
               <h1 class="text-3xl mt-3">Point Config</h1>

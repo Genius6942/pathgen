@@ -74,7 +74,9 @@ export const drawPath = (ctx: CanvasRenderingContext2D) => {
     ctx.beginPath();
     ctx.moveTo(path[i].x, path[i].y);
     ctx.lineTo(path[i + 1].x, path[i + 1].y);
-    ctx.strokeStyle = numberToColor(path[i].speed / get(config).bot.maxVelocity);
+    ctx.strokeStyle = get(state).visible.coloredPath
+      ? numberToColor(path[i].speed / get(config).bot.maxVelocity)
+      : CONSTANTS.path.color;
     ctx.lineWidth = CONSTANTS.path.thickness * scale;
     ctx.stroke();
   }
@@ -202,24 +204,18 @@ export const renderNearestPoint = (ctx: CanvasRenderingContext2D, mouse: Point) 
 };
 
 const renderHighlightedPoint = (ctx: CanvasRenderingContext2D, index: number) => {
-	const path = get(state).generatedPoints.map((point) =>
-		transformPoint(point, ctx.canvas)
-	);
-	if (path.length < 2) return;
+  const path = get(state).generatedPoints.map((point) =>
+    transformPoint(point, ctx.canvas)
+  );
+  if (path.length < 2) return;
 
-	const point = path[index];
-	ctx.beginPath();
-	ctx.arc(
-		point.x,
-		point.y,
-		(0.7 * ctx.canvas.height) / CONSTANTS.scale,
-		0,
-		Math.PI * 2
-	);
-	ctx.fillStyle = numberToColor(path[index].speed / get(config).bot.maxVelocity);
-	ctx.fill();
-	ctx.closePath();
-}
+  const point = path[index];
+  ctx.beginPath();
+  ctx.arc(point.x, point.y, (0.7 * ctx.canvas.height) / CONSTANTS.scale, 0, Math.PI * 2);
+  ctx.fillStyle = numberToColor(path[index].speed / get(config).bot.maxVelocity);
+  ctx.fill();
+  ctx.closePath();
+};
 
 export const drawMouse = (ctx: CanvasRenderingContext2D, mouse: Point) => {
   const scale = ctx.canvas.height / CONSTANTS.scale;
@@ -238,13 +234,14 @@ export const render = (ctx: CanvasRenderingContext2D, mouse: Point) => {
   drawBackground(ctx);
   drawBoundaries(ctx);
   drawPath(ctx);
-  if (visible.flags) drawFlagPoints(ctx, mouse);
   if (visible.handles) {
     drawHandleLinks(ctx);
     drawHandles(ctx, mouse);
   }
   if (get(state).editingMode === "flagPoint") renderNearestPoint(ctx, mouse);
-	if (get(state).visible.highlightIndex >= 0) renderHighlightedPoint(ctx, get(state).visible.highlightIndex);
-  drawPoints(ctx, mouse);
+  if (visible.highlightIndex >= 0)
+    renderHighlightedPoint(ctx, get(state).visible.highlightIndex);
+  if (visible.points) drawPoints(ctx, mouse);
+  if (visible.flags) drawFlagPoints(ctx, mouse);
   // drawMouse(ctx, mouse);
 };
