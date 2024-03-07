@@ -105,26 +105,12 @@ export class BezierSpline {
 
     for (let i = 0; i < numPoints + 1; i++) {
       const distAtPoint = i * distBetween;
-      const t = this.getT(distAtPoint);
-      const pt = this.evaluate(
-        typeof t === "number" ? t : (this.points.length + 2) / 3 - 1
-      );
+      const rawT = this.getT(distAtPoint);
+      const t = typeof rawT === "number" ? rawT : (this.points.length + 2) / 3 - 1;
+      const pt = this.evaluate(t!);
       path.push([t!, pt, 0]);
     }
     this.spline = path;
-  }
-
-  // returns complete spline
-  generateSpline(distBetween: number, maxVel: number, maxAccel: number) {
-    this.spaceInject(distBetween);
-    this.generateVelocities(maxVel, maxAccel);
-    const path: [Point, number][] = [];
-
-    // first index is point, second part is speed
-    for (let i = 0; i < this.spline.length; i++) {
-      path.push([this.spline[i][1], this.spline[i][2]]);
-    }
-    return path;
   }
 
   static project(projected: Point, p1: Point, p2: Point) {
@@ -171,30 +157,55 @@ export class BezierSpline {
     return this;
   }
 
-  // fix tmrw
   curvature(t: number) {
     const u = Math.floor(t);
     const tPrime = t - u;
     return this.sectioned[u].evaluate(tPrime);
   }
 
-  generateVelocities(maxVel: number, maxAccel: number, k = 1) {
+  generateVelocities(maxVel: number, maxAccel: number, k = 3) {
     // velocity of last point to be 0
     this.spline[this.spline.length - 1].push(0);
 
-    // unfinished
-    // for (let i = 0; i < this.spline.length - 1; i++) {
-    //   const vel = Math.min(maxVel, k / this.curvature(this.spline[i][0]));
-    //   this.spline[i][2] = vel;
-    // }
+    const altDists = [];
+
+    for (let i = 0; i < this.sectioned.length; i++) {
+      const bez = new Bernstein(this.sectioned[i].points);
+      // console.log(bez);
+
+      bez.inject(50);
+      bez.generateCD();
+      altDists.push(bez);
+    }
+
+    for (let i = 0; i < this.spline.length - 1; i++) {
+      let u = Math.floor(this.spline[i][0]);
+      let cur = Math.abs(altDists[u].curvature(this.spline[i][0] - u));
+      let vel = Math.min(maxVel, k / cur);
+      this.spline[i][2] = vel;
+    }
 
     // velocity of all the other points
     for (let i = this.spline.length - 1; i > 0; i--) {
       const dist = Point.distance(this.spline[i][1], this.spline[i - 1][1]);
       let newVel = Math.sqrt(2 * maxAccel * dist + Math.pow(this.spline[i][2], 2));
-      newVel = Math.min(this.spline[i - 1][2], this.spline[i][2]);
+      newVel = Math.min(this.spline[i - 1][2], newVel);
       this.spline[i - 1][2] = newVel;
     }
     return this;
+  }
+  // returns complete spline
+  // k is a value measuring how fast the bot should move at turns.
+  generateSpline(distBetween: number, maxVel: number, maxAccel: number, k = 3) {
+    this.spaceInject(distBetween);
+    this.generateVelocities(maxVel, maxAccel, k);
+    const path: [Point, number][] = [];
+
+    // first index is point, second part is speed
+    for (let i = 0; i < this.spline.length; i++) {
+      path.push([this.spline[i][1], this.spline[i][2]]);
+      console.log(this.spline[i][2]);
+    }
+    return path;
   }
 }
