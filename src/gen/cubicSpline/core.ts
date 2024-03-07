@@ -157,11 +157,12 @@ export class BezierSpline {
     return this;
   }
 
-  curvature(t: number) {
-    const u = Math.floor(t);
-    const tPrime = t - u;
-    return this.sectioned[u].evaluate(tPrime);
-  }
+  // fix tmrw
+  // curvature(t: number) {
+  //   const u = Math.floor(t);
+  //   const tPrime = t - u;
+  //   return this.sectioned[u].evaluate(tPrime);
+  // }
 
   generateVelocities(maxVel: number, maxAccel: number, k = 3) {
     // velocity of last point to be 0
