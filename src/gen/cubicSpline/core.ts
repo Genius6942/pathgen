@@ -205,7 +205,7 @@ export class BezierSpline {
     // first index is point, second part is speed
     for (let i = 0; i < this.spline.length; i++) {
       path.push([this.spline[i][1], this.spline[i][2]]);
-      console.log(this.spline[i][2]);
+      // console.log(this.spline[i][2]);
     }
     return path;
   }

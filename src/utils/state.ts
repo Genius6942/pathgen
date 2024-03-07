@@ -87,6 +87,11 @@ export interface PathConfig {
   background: Background;
   autosave: boolean;
   flags: { [key: string]: "number" | "boolean" };
+  distanceBetween: number;
+  bot: {
+    maxVelocity: number;
+    maxAcceleration: number;
+  };
 }
 
 export const config = writable<PathConfig>({
@@ -94,6 +99,11 @@ export const config = writable<PathConfig>({
   background: "over-under",
   autosave: false,
   flags: {},
+  distanceBetween: 0.5,
+  bot: {
+    maxVelocity: 24,
+    maxAcceleration: 12,
+  },
 });
 
 config.subscribe((v) => {
@@ -126,12 +136,22 @@ export interface AppState {
   generatedPoints: GeneratedPoint[];
   fileHandle: FileSystemFileHandle | null;
   editingMode: EditingMode;
+  visible: {
+    handles: boolean;
+    flags: boolean;
+		highlightIndex: number;
+  };
 }
 export const state = writable<AppState>({
   selected: null,
   generatedPoints: [],
   fileHandle: null,
   editingMode: "pathPoint",
+  visible: {
+    handles: true,
+    flags: true,
+		highlightIndex: -1,
+  },
 });
 
 export const lastSelected = writable<Selection | null>(null);
@@ -181,7 +201,6 @@ config.subscribe(() => {
       return s;
     });
   } catch (e) {
-    console.log("shit e");
     console.error(e);
   }
 });
@@ -234,7 +253,7 @@ const importData = (data: any) => {
   flagPoints.set(data.flagPoints);
 
   config.set(data.config);
-	clearHistory();
+  clearHistory();
 };
 
 export interface HistoryState {

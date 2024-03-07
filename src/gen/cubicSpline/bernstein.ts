@@ -22,24 +22,25 @@ function choose(n: number, k: number) {
 
 // generates coefficients for bezier curves expressed in berstein polynomial form
 // n is the degree of the bezier curve
-function generateBernstein(n: number) {
-  const coeffs = [];
-  for (let i = 0; i <= n; i++) {
-    const coI = [];
-    const cof = choose(n, i);
-    for (let k = n - i; k >= 0; k--) {
-      if (k % 2 == 1) {
-        coI.push(-1 * cof * choose(n - i, k));
-      } else {
-        coI.push(cof * choose(n - i, k));
-      }
+function generateBernstein(n: number){
+    const coeffs = [];
+    for(let i = 0; i <= n; i++){
+        const coI = [];
+        const cof = choose(n, i);
+        for(let k = n - i; k >= 0; k--){
+            if ((k % 2) == 1){
+                coI.push(-1 * cof * choose(n - i, k));
+            }
+            else{
+                coI.push(cof * choose(n - i, k));
+            }
+        }   
+        while(coI.length < (n + 1)){
+            coI.push(0);
+        }
+        coeffs.push(coI);
     }
-    while (coI.length < n + 1) {
-      coI.push(0);
-    }
-    coeffs.push(coI);
-  }
-  return coeffs;
+    return coeffs;
 }
 
 export class Bernstein {
@@ -61,7 +62,7 @@ export class Bernstein {
 
   evaluate(t: number) {
     const degree = this.points.length - 1;
-    const tCoeffs = [];
+    const tCoeffs: number[] = [];
     for (let i = 0; i <= degree; i++) {
       let tValue = 0;
       for (let k = 0; k <= degree; k++) {
@@ -79,7 +80,7 @@ export class Bernstein {
 
   // injects numPoints of points into the curve
   inject(numPoints: number) {
-    const path: (typeof this)["injected"] = [];
+    const path: [number, Point][] = [];
     for (let i = 0; i <= numPoints; i++) {
       const t = i / numPoints;
       const addPoint = this.evaluate(t);
@@ -93,7 +94,7 @@ export class Bernstein {
   // generates cumulative Distance LUT
   generateCD() {
     let d = 0;
-    const cumDistance: typeof this.cumD = [[0, 0]];
+    const cumDistance: [number, number][] = [[0, 0]];
 
     for (let i = 0; i < this.injected.length - 1; i++) {
       const pointToPointDistance = Point.distance(
@@ -109,7 +110,7 @@ export class Bernstein {
   }
 
   // gets t-value for a distance value given the cum dist LUT
-  getT(dist: number): number {
+  getT(dist: number) {
     for (let i = 1; i < this.cumD.length; i++) {
       if (this.cumD[i][1] >= dist) {
         const dValue1 = new Point(this.cumD[i - 1][0], this.cumD[i - 1][1]);
@@ -121,8 +122,6 @@ export class Bernstein {
         return findingT.x;
       }
     }
-
-    return 0;
   }
 
   // injects points based on distance between each 2 points instead of t values
@@ -135,7 +134,7 @@ export class Bernstein {
       this.generateCD();
     }
 
-    const path: typeof this.injected = [];
+    const path: [number, Point][] = [];
 
     const curveLength = this.cumD[this.cumD.length - 1][1];
     const numPoints = Math.floor(curveLength / distBetween);
@@ -148,7 +147,7 @@ export class Bernstein {
     for (let i = 0; i < numPoints + 1; i++) {
       const distAtPoint = i * distBetween;
       const t = this.getT(distAtPoint);
-      path.push([t, this.evaluate(t)]);
+      path.push([t!, this.evaluate(t!)]);
     }
     this.injected = path;
     return this;
@@ -182,8 +181,9 @@ export class Bernstein {
 
   // calculates signed curvature at t value
   curvature(t: number) {
-    const firstD = this.derivative();
-    const secondD = this.secondDerivative();
+    const bez = new Bernstein(this.points);
+    const firstD = bez.derivative();
+    const secondD = bez.secondDerivative();
     const firstDPoint = firstD.evaluate(t);
     const secondDPoint = secondD.evaluate(t);
     const numerator = firstDPoint.x * secondDPoint.y - firstDPoint.y * secondDPoint.x;

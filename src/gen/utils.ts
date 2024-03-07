@@ -77,4 +77,8 @@ export class GeneratedPoint extends Point {
 		p.index = point.index;
 		return p;
 	}
+
+	clone() {
+		return new GeneratedPoint(this.x, this.y, this.speed, this.index) as typeof this;
+	}
 }

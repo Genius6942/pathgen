@@ -131,38 +131,42 @@
         } as Selection;
       }
 
-      $points.forEach((point, pointIndex) => {
-        const handleIndex = point.handles.findIndex(
-          (handle) =>
-            transformPoint(point.add(handle), canvas).distance(m) <=
-            CONSTANTS.point.handle.radius * (size / CONSTANTS.scale)
-        );
-        if (handleIndex !== -1) {
-          $state.selected = {
-            type: "handle",
-            point: pointIndex,
-            handle: handleIndex,
-          } as Selection;
-        }
-      });
-
-      const path = $state.generatedPoints.map((point) => transformPoint(point, canvas));
-      const selectedFlag = $flagPoints
-        .map((point) => {
-          const pathPoint = path[point.index];
-          return new Point(pathPoint.x, pathPoint.y);
-        })
-        .findIndex(
-          (point) => point.distance(m) <= CONSTANTS.flag.radius * (size / CONSTANTS.scale)
-        );
-
-      if (selectedFlag >= 0) {
-        $state.selected = {
-          type: "flag",
-          flag: selectedFlag,
-        } as Selection;
+      if ($state.visible.handles) {
+        $points.forEach((point, pointIndex) => {
+          const handleIndex = point.handles.findIndex(
+            (handle) =>
+              transformPoint(point.add(handle), canvas).distance(m) <=
+              CONSTANTS.point.handle.radius * (size / CONSTANTS.scale)
+          );
+          if (handleIndex !== -1) {
+            $state.selected = {
+              type: "handle",
+              point: pointIndex,
+              handle: handleIndex,
+            } as Selection;
+          }
+        });
       }
 
+      if ($state.visible.flags) {
+        const path = $state.generatedPoints.map((point) => transformPoint(point, canvas));
+        const selectedFlag = $flagPoints
+          .map((point) => {
+            const pathPoint = path[point.index];
+            return new Point(pathPoint.x, pathPoint.y);
+          })
+          .findIndex(
+            (point) =>
+              point.distance(m) <= CONSTANTS.flag.radius * (size / CONSTANTS.scale)
+          );
+
+        if (selectedFlag >= 0) {
+          $state.selected = {
+            type: "flag",
+            flag: selectedFlag,
+          } as Selection;
+        }
+      }
       // dragging stuff
       if (!$state.selected) {
         if ($state.editingMode === "pathPoint") {

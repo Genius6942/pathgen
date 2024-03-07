@@ -64,7 +64,6 @@ export const catmullRom = (path: PathPoint[]): GeneratedPoint[] => {
   path.slice(1, path.length - 1).forEach((point) => {
     paths.at(-1)?.push(Point.from(point));
 
-    // console.log(point);
     if (point.reverse) {
       paths.push([Point.from(point)]);
     }
@@ -72,7 +71,6 @@ export const catmullRom = (path: PathPoint[]): GeneratedPoint[] => {
 
   paths.at(-1)?.push(Point.from(path.at(-1)!));
 
-  // console.log(paths);
   const generatedPaths = paths
     // generation
     .map((p) => raw_catmullRom(p))

@@ -27,7 +27,7 @@
     @apply focus:ring-transparent dark:focus:ring-transparent;
     @apply focus-within:ring-0 dark:focus-within:ring-0;
     @apply focus:shadow-none dark:focus:shadow-none;
-    
+
     @apply after:absolute before:absolute;
     @apply after:top-0 before:top-0;
     @apply after:block before:inline-block;
@@ -52,4 +52,22 @@
 option {
   color: white;
   background-color: rgb(51 65 85 / var(--tw-bg-opacity));
+}
+
+.scrollbar::-webkit-scrollbar {
+  appearance: none;
+  width: 8px;
+	margin-left: 2px;
+	background-color: rgb(15 23 42);
+  border-radius: 9999px;
+}
+
+.scrollbar::-webkit-scrollbar-thumb {
+	background-color: rgb(71 85 105);
+  border-radius: 9999px;
+}
+
+.scrollbar::-webkit-scrollbar-track {
+	background-color: rgb(15 23 42);
+  border-radius: 9999px;
 }

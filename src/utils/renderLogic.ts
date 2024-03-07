@@ -2,6 +2,18 @@ import { get } from "svelte/store";
 
 import { CONSTANTS, Point, config, flagPoints, points, state } from ".";
 
+const numberToColor = (input: number): string => {
+  if (input < -1 || input > 1) {
+    throw new Error("Input must be between -1 and 1 inclusive");
+  }
+
+  // Map the input range [-1, 1] to the hue range [0, 360]
+  const hue = (input + 1) * 272;
+
+  // Return the color as an HSL string
+  return `hsl(${hue}, 100%, 50%)`;
+};
+
 // Background shit
 import { backgrounds, type Background } from "./background";
 
@@ -62,7 +74,7 @@ export const drawPath = (ctx: CanvasRenderingContext2D) => {
     ctx.beginPath();
     ctx.moveTo(path[i].x, path[i].y);
     ctx.lineTo(path[i + 1].x, path[i + 1].y);
-    ctx.strokeStyle = CONSTANTS.path.color;
+    ctx.strokeStyle = numberToColor(path[i].speed / get(config).bot.maxVelocity);
     ctx.lineWidth = CONSTANTS.path.thickness * scale;
     ctx.stroke();
   }
@@ -72,7 +84,7 @@ export const drawFlagPoints = (ctx: CanvasRenderingContext2D, mouse: Point) => {
   const scale = ctx.canvas.height / CONSTANTS.scale;
   const selection = get(state).selected;
   const generatedPath = get(state).generatedPoints;
-	if (generatedPath.length < 2) return;
+  if (generatedPath.length < 2) return;
   get(flagPoints)
     .map((point) => {
       const pathPoint = generatedPath[Math.min(point.index, generatedPath.length - 1)];
@@ -189,6 +201,26 @@ export const renderNearestPoint = (ctx: CanvasRenderingContext2D, mouse: Point) 
   ctx.closePath();
 };
 
+const renderHighlightedPoint = (ctx: CanvasRenderingContext2D, index: number) => {
+	const path = get(state).generatedPoints.map((point) =>
+		transformPoint(point, ctx.canvas)
+	);
+	if (path.length < 2) return;
+
+	const point = path[index];
+	ctx.beginPath();
+	ctx.arc(
+		point.x,
+		point.y,
+		(0.7 * ctx.canvas.height) / CONSTANTS.scale,
+		0,
+		Math.PI * 2
+	);
+	ctx.fillStyle = numberToColor(path[index].speed / get(config).bot.maxVelocity);
+	ctx.fill();
+	ctx.closePath();
+}
+
 export const drawMouse = (ctx: CanvasRenderingContext2D, mouse: Point) => {
   const scale = ctx.canvas.height / CONSTANTS.scale;
 
@@ -201,14 +233,18 @@ export const drawMouse = (ctx: CanvasRenderingContext2D, mouse: Point) => {
 };
 
 export const render = (ctx: CanvasRenderingContext2D, mouse: Point) => {
+  const { visible } = get(state);
   clearCanvas(ctx);
   drawBackground(ctx);
   drawBoundaries(ctx);
   drawPath(ctx);
-  drawFlagPoints(ctx, mouse);
-  drawHandleLinks(ctx);
-  drawHandles(ctx, mouse);
+  if (visible.flags) drawFlagPoints(ctx, mouse);
+  if (visible.handles) {
+    drawHandleLinks(ctx);
+    drawHandles(ctx, mouse);
+  }
   if (get(state).editingMode === "flagPoint") renderNearestPoint(ctx, mouse);
+	if (get(state).visible.highlightIndex >= 0) renderHighlightedPoint(ctx, get(state).visible.highlightIndex);
   drawPoints(ctx, mouse);
   // drawMouse(ctx, mouse);
 };
