@@ -184,6 +184,6 @@
   });
 </script>
 
-<div class="border-2 border-white rounded-3xl mx-10 overflow-hidden">
+<div class="border-2 border-white rounded-3xl overflow-hidden">
   <canvas bind:this={canvas} {width} height="200"></canvas>
 </div>

@@ -137,13 +137,13 @@ export interface AppState {
   fileHandle: FileSystemFileHandle | null;
   editingMode: EditingMode;
   visible: {
-		points: boolean;
+    points: boolean;
     handles: boolean;
     flags: boolean;
 
-		// other stuff related to rendering
-		highlightIndex: number;
-		coloredPath: boolean;
+    // other stuff related to rendering
+    highlightIndex: number;
+    coloredPath: boolean;
   };
 }
 export const state = writable<AppState>({
@@ -152,11 +152,11 @@ export const state = writable<AppState>({
   fileHandle: null,
   editingMode: "pathPoint",
   visible: {
-		points: true,
+    points: true,
     handles: true,
     flags: true,
-		highlightIndex: -1,
-		coloredPath: true,
+    highlightIndex: -1,
+    coloredPath: true,
   },
 });
 
@@ -170,7 +170,11 @@ export const updateLastSelected = () => {
 points.subscribe((p) => {
   if (p.length < 2) {
     flagPoints.set([]);
-    state.update((s) => ({ ...s, generatedPoints: [], editingMode: "pathPoint" }));
+    state.update((s) => ({
+      ...s,
+      generatedPoints: [],
+      editingMode: "pathPoint",
+    }));
     return;
   }
   const method = get(config).algorithm;
@@ -182,12 +186,17 @@ points.subscribe((p) => {
       s.generatedPoints = algorithm(waypoints);
 
       flagPoints.update((f) => {
-        return f.filter((flagPoint) => flagPoint.index < s.generatedPoints.length);
+        return f.filter(
+          (flagPoint) => flagPoint.index < s.generatedPoints.length
+        );
       });
 
       return s;
     } catch (e) {
-      console.error("shit e:", JSON.parse(JSON.stringify(p.map((p) => p.export()))));
+      console.error(
+        "shit e:",
+        JSON.parse(JSON.stringify(p.map((p) => p.export())))
+      );
       console.error(e);
       return s;
     }
@@ -197,7 +206,8 @@ points.subscribe((p) => {
 config.subscribe(() => {
   try {
     const p = get(points);
-    if (p.length < 2) return state.update((s) => ({ ...s, generatedPoints: [] }));
+    if (p.length < 2)
+      return state.update((s) => ({ ...s, generatedPoints: [] }));
     const method = get(config).algorithm;
     const algorithm = pathAlgorithms[method];
     const waypoints: PathPoint[] = p.map((point) => point.clone());
@@ -216,7 +226,9 @@ const exportData = () => {
   const generated = rawPoints.map((point) => ({ ...point, flags: {} }));
   // add flags from points
   get(points).forEach((point) => {
-    const generatedIndex = generated.findIndex((p) => p.x === point.x && p.y === point.y);
+    const generatedIndex = generated.findIndex(
+      (p) => p.x === point.x && p.y === point.y
+    );
     if (generatedIndex !== -1) {
       generated[generatedIndex].flags = point.flags;
     }
@@ -253,6 +265,7 @@ const importData = (data: any) => {
         new PathPoint(point.x, point.y, {
           flags: point.flags,
           handles: point.handles,
+          reverse: point.reverse,
         })
     )
   );
@@ -304,11 +317,12 @@ export const pushHistory = (isInitial = false) => {
   const p = get(points);
   const s = get(state);
   const c = get(config);
+  const f = get(flagPoints);
 
   if (isInitial) {
     initialState.set({
       points: p.map((point) => point.export()),
-      flagPoints: get(flagPoints),
+      flagPoints: f,
       state: {
         ...JSON.parse(JSON.stringify(s)),
         generatedPoints: s.generatedPoints.map((point) => point.export()),
@@ -373,8 +387,13 @@ config.subscribe(() => {
   if (get(config).autosave) save();
 });
 
-export const addFlag = (flag: string, type: "boolean" | "number", overWrite = false) => {
-  if (flag in get(config).flags && !overWrite) throw new Error("Flag already exists");
+export const addFlag = (
+  flag: string,
+  type: "boolean" | "number",
+  overWrite = false
+) => {
+  if (flag in get(config).flags && !overWrite)
+    throw new Error("Flag already exists");
   config.update((c) => {
     c.flags[flag] = type;
     return c;

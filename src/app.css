@@ -61,6 +61,7 @@ option {
 .scrollbar::-webkit-scrollbar {
   appearance: none;
   width: 8px;
+  height: 8px;
 	margin-left: 2px;
 	background-color: rgb(15 23 42);
   border-radius: 9999px;

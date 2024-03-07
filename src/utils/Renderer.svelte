@@ -195,7 +195,6 @@
           );
 
           addFlagPoint(nearestPoint);
-          setTimeout(pushHistory, 0);
         }
       } else {
         if ($state.selected.type === "handle") {

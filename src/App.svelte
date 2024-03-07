@@ -43,18 +43,20 @@
         <Renderer />
       </div>
     </div>
-    <div class="flex flex-col gap-5">
+    <div class="flex flex-col gap-5 mx-10 my-5">
       <div
-        class="flex gap-3 p-5 w-[500px] border-white border-2 rounded-3xl m-10 flex-col items-stretch flex-grow"
+        class="flex gap-3 pb-5 w-[500px] border-white border-2 rounded-3xl flex-col items-stretch flex-grow overflow-hidden"
       >
         <div
-          class="flex flex-col gap-2 overflow-auto scrollbar flex-grow"
+          class="flex flex-col gap-2 overflow-auto scrollbar flex-grow px-5 pt-5 pb-2 mr-2 border-b-2 border-dashed border-white"
           bind:this={container}
           style={`max-height: ${initialHeight}px`}
         >
           {#if initialHeight >= 0}
             <!-- POINT DESCRIPTOR -->
-            <h1 class="text-3xl w-full pb-2 border-b-2 border-b-white flex items-center">
+            <h1
+              class="text-3xl w-full pb-2 border-b-2 border-b-white flex items-center"
+            >
               {#if point}
                 {#if point instanceof Point}
                   Point at ({point.x.toFixed(2)}, {point.y.toFixed(2)})
@@ -144,10 +146,10 @@
               </select>
             </label>
 
-            <div class="flex gap-3 relative items-center">
+            <div class="flex gap-3 relative items-center overflow-x-auto scrollbar min-h-12">
               Show:
 
-              <label class="relative">
+              <label class="relative flex">
                 <input
                   type="checkbox"
                   bind:checked={$state.visible.points}
@@ -156,7 +158,7 @@
                 Points
               </label>
               <div class="divider" />
-              <label class="relative">
+              <label class="relative flex">
                 <input
                   type="checkbox"
                   bind:checked={$state.visible.handles}
@@ -165,7 +167,7 @@
                 Handles
               </label>
               <div class="divider" />
-              <label class="relative">
+              <label class="relative flex">
                 <input
                   type="checkbox"
                   bind:checked={$state.visible.flags}
@@ -173,20 +175,27 @@
                 />
                 Flags
               </label>
+
+              <div class="divider"/>
+
+              <label class="relative flex whitespace-nowrap">
+                <input
+                  type="checkbox"
+                  bind:checked={$state.visible.coloredPath}
+                  class="toggle"
+                />
+                Colored Path
+              </label>
             </div>
-            <label class="relative">
-              <input
-                type="checkbox"
-                bind:checked={$state.visible.coloredPath}
-                class="toggle"
-              />
-              Colored Path
-            </label>
 
             {#if pathPoint}
               <h1 class="text-3xl mt-3">Point Config</h1>
               <label class="relative">
-                <input type="checkbox" bind:checked={pathPoint.reverse} class="toggle" />
+                <input
+                  type="checkbox"
+                  bind:checked={pathPoint.reverse}
+                  class="toggle"
+                />
                 Reverse here
               </label>
             {/if}
@@ -198,8 +207,9 @@
                 .fill(null)
                 .map( (_, i) => ({ key: Object.keys($config.flags)[i], type: $config.flags[Object.keys($config.flags)[i]] }) ) as flag}
                 <div class="flex items-center gap-3">
-                  <button class="button py-[2px]" on:click={() => removeFlag(flag.key)}
-                    >Delete</button
+                  <button
+                    class="button py-[2px]"
+                    on:click={() => removeFlag(flag.key)}>Delete</button
                   >
                   <div class="h-7 border-white border-r-2" />
                   {flag.key}: {flag.type}
@@ -262,7 +272,8 @@
                       on:change={(e) => {
                         // @ts-ignore
                         if (e.target.checked && point) {
-                          point.flagsAny[flag.key] = flag.type === "boolean" ? false : 0;
+                          point.flagsAny[flag.key] =
+                            flag.type === "boolean" ? false : 0;
                         } else if (point) {
                           delete point.flagsAny[flag.key];
                           point = point;
@@ -303,7 +314,7 @@
             {/if}
           {/if}
         </div>
-        <div class="border-t-2 mt-auto py-2 border-transparent">
+        <div class="border-t-2 mt-auto border-transparent px-5">
           <div class="flex gap-3 items-center relative justify-between">
             <button class="button" on:click={() => undo(1)}>Undo</button>
             <div class="divider"></div>
@@ -320,7 +331,9 @@
               </label>
               <button id="import" class="button" on:click={load}>Import</button>
               <button id="save" class="button" on:click={save}>Save</button>
-              <button id="saveas" class="button" on:click={saveAs}>Save As</button>
+              <button id="saveas" class="button" on:click={saveAs}
+                >Save As</button
+              >
             </div>
           </div>
         </div>
@@ -336,9 +349,13 @@
   ></div>
 
   <!-- footer -->
-  <div class="h-12 bg-slate-900 text-white flex items-center text-xl px-5 font-mono">
-    Copyright &COPY; <a href="https://haelp.dev" class="ml-2 underline" target="_blank"
-      >Joshua Liu</a
+  <div
+    class="h-12 bg-slate-900 text-white flex items-center text-xl px-5 font-mono"
+  >
+    Copyright &COPY; <a
+      href="https://haelp.dev"
+      class="ml-2 underline"
+      target="_blank">Joshua Liu</a
     >, Brandon Ni {new Date().getFullYear()}
     <span class="ml-auto">v{CONSTANTS.version}</span>
   </div>
