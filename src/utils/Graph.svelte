@@ -130,16 +130,18 @@
             (i * (canvas.width - margin.left - margin.right)) /
               ($state.generatedPoints.length - 1),
           margin.top +
-            (canvas.height - margin.bottom - margin.top) *
-              (1 - start.speed / $config.bot.maxVelocity)
+            ((canvas.height - margin.bottom - margin.top) *
+              (1 - start.speed / $config.bot.maxVelocity)) /
+              2
         );
         ctx.lineTo(
           margin.left +
             ((i + 1) * (canvas.width - margin.left - margin.right)) /
               ($state.generatedPoints.length - 1),
           margin.top +
-            (canvas.height - margin.bottom - margin.top) *
-              (1 - end.speed / $config.bot.maxVelocity)
+            ((canvas.height - margin.bottom - margin.top) *
+              (1 - end.speed / $config.bot.maxVelocity)) /
+              2
         );
         ctx.stroke();
 
@@ -153,6 +155,16 @@
           $state.visible.highlightIndex = Math.round(
             (($state.generatedPoints.length - 1) * (mouse - margin.left)) /
               (canvas.width - margin.left - margin.right)
+          );
+
+          // write speed value of selected point at top right
+          ctx.font = "20px monospace";
+          ctx.textAlign = "right";
+          ctx.textBaseline = "bottom";
+          ctx.fillText(
+            $state.generatedPoints[$state.visible.highlightIndex].speed.toFixed(2),
+            canvas.width - margin.right - 20,
+            margin.top - 3
           );
         } else $state.visible.highlightIndex = -1;
       }
