@@ -40,6 +40,21 @@ export const getWindowPoint = (point: Point, canvas: HTMLCanvasElement) => {
   return new Point(p.x + rect.left, p.y + rect.top);
 };
 
+export const rotatePoint = <T extends Point>(origin: Point, point: T, angle: number) => {
+  const px = point.x - origin.x;
+  const py = point.y - origin.y;
+
+  // Rotate points
+  const x = px * Math.cos(angle) + py * Math.sin(angle);
+  const y = -px * Math.sin(angle) + py * Math.cos(angle);
+
+  // Translate point back
+  const fx = x + origin.x;
+  const fy = y + origin.y;
+
+  return point.clone().set({ x: fx, y: fy });
+};
+
 // actual rendering logic
 
 export const clearCanvas = (ctx: CanvasRenderingContext2D) => {
@@ -176,6 +191,37 @@ export const drawPoints = (ctx: CanvasRenderingContext2D, mouse: Point) => {
   });
 };
 
+export const drawBot = (ctx: CanvasRenderingContext2D) => {
+  const bot = get(config).bot;
+  const botIndex = get(state).visible.highlightIndex;
+  const genPoints = get(state).generatedPoints;
+  const location = genPoints[botIndex];
+  const botCorners = [
+    location.add(new Point(bot.width / 2, bot.length / 2)),
+    location.add(new Point(bot.width / 2, -bot.length / 2)),
+    location.add(new Point(-bot.width / 2, -bot.length / 2)),
+    location.add(new Point(-bot.width / 2, bot.length / 2)),
+  ]
+    .map((point) =>
+      rotatePoint(
+        location,
+        point,
+        -genPoints[botIndex === genPoints.length - 1 ? botIndex - 1 : botIndex + 1].angle(
+          location
+        )
+      )
+    )
+    .map((point) => transformPoint(point, ctx.canvas));
+
+  ctx.beginPath();
+  ctx.moveTo(botCorners[0].x, botCorners[0].y);
+  [...botCorners.slice(1), botCorners[0]].forEach((point) =>
+    ctx.lineTo(point.x, point.y)
+  );
+  ctx.strokeStyle = CONSTANTS.bot.color;
+  ctx.stroke();
+};
+
 export const renderNearestPoint = (ctx: CanvasRenderingContext2D, mouse: Point) => {
   const path = get(state).generatedPoints.map((point) =>
     transformPoint(point, ctx.canvas)
@@ -241,6 +287,7 @@ export const render = (ctx: CanvasRenderingContext2D, mouse: Point) => {
   if (get(state).editingMode === "flagPoint") renderNearestPoint(ctx, mouse);
   if (visible.highlightIndex >= 0)
     renderHighlightedPoint(ctx, get(state).visible.highlightIndex);
+  if (visible.highlightIndex >= 0 && visible.bot) drawBot(ctx);
   if (visible.points) drawPoints(ctx, mouse);
   if (visible.flags) drawFlagPoints(ctx, mouse);
   // drawMouse(ctx, mouse);

@@ -88,7 +88,7 @@ export interface PathConfig {
   autosave: boolean;
   flags: { [key: string]: "number" | "boolean" };
   distanceBetween: number;
-	k: number;
+  k: number;
   bot: {
     maxVelocity: number;
     maxAcceleration: number;
@@ -103,7 +103,7 @@ export const config = writable<PathConfig>({
   autosave: false,
   flags: {},
   distanceBetween: 0.5,
-	k: 3,
+  k: 3,
   bot: {
     maxVelocity: 24,
     maxAcceleration: 12,
@@ -146,11 +146,11 @@ export interface AppState {
     points: boolean;
     handles: boolean;
     flags: boolean;
+    bot: boolean;
 
     // other stuff related to rendering
     highlightIndex: number;
     coloredPath: boolean;
-		bot: boolean;
   };
 }
 export const state = writable<AppState>({
@@ -162,9 +162,10 @@ export const state = writable<AppState>({
     points: true,
     handles: true,
     flags: true,
+    bot: true,
+
     highlightIndex: -1,
     coloredPath: true,
-		bot: true,
   },
 });
 

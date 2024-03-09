@@ -111,6 +111,14 @@ export class Point {
     return this.clone().set(Point.lerp(this, p, t)) as this;
   }
 
+	static angle(p1: Point, p2: Point) {
+		return Math.atan2(p2.y - p1.y, p2.x - p1.x);
+	}
+
+	angle(p: Point) {
+		return Point.angle(this, p);
+	}
+
   clone(): this {
     return new (this.constructor as any)(this.x, this.y);
   }
