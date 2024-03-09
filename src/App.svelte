@@ -54,9 +54,7 @@
         >
           {#if initialHeight >= 0}
             <!-- POINT DESCRIPTOR -->
-            <h1
-              class="text-3xl w-full pb-2 border-b-2 border-b-white flex items-center"
-            >
+            <h1 class="text-3xl w-full pb-2 border-b-2 border-b-white flex items-center">
               {#if point}
                 {#if point instanceof Point}
                   Point at ({point.x.toFixed(2)}, {point.y.toFixed(2)})
@@ -113,6 +111,13 @@
                 {/each}
               </select>
             </label>
+            <label>
+							K: ({$config.k.toFixed(2)})
+              <input type="range" class="slider" min={1} max={10} step={.1} bind:value={$config.k}/>
+            </label>
+
+            <!-- BOT CONFIG -->
+            <h1 class="text-3xl mt-3">Bot Config</h1>
             <div class="flex gap-3 items-center">
               <label>
                 Max velocity:
@@ -125,6 +130,25 @@
               <div class="divider"></div>
               <label>
                 Max acceleration:
+                <input
+                  type="number"
+                  class="bg-transparent border-2 border-white border-dashed rounded-2xl px-[2px] py-[1px] text-center outline-none focus:border-solid transition-all duration-200 ease-in-out w-20"
+                  bind:value={$config.bot.maxAcceleration}
+                />
+              </label>
+            </div>
+            <div class="flex gap-3 items-center">
+              <label>
+                Width:
+                <input
+                  type="number"
+                  class="bg-transparent border-2 border-white border-dashed rounded-2xl px-[2px] py-[1px] text-center outline-none focus:border-solid transition-all duration-200 ease-in-out w-20"
+                  bind:value={$config.bot.maxVelocity}
+                />
+              </label>
+              <div class="divider"></div>
+              <label>
+                Height:
                 <input
                   type="number"
                   class="bg-transparent border-2 border-white border-dashed rounded-2xl px-[2px] py-[1px] text-center outline-none focus:border-solid transition-all duration-200 ease-in-out w-20"
@@ -146,7 +170,7 @@
               </select>
             </label>
 
-            <div class="flex gap-3 relative items-center overflow-x-auto scrollbar min-h-12">
+            <div class="flex gap-3 relative items-center flex-wrap">
               Show:
 
               <label class="relative flex">
@@ -176,7 +200,7 @@
                 Flags
               </label>
 
-              <div class="divider"/>
+              <div class="divider ml-14" />
 
               <label class="relative flex whitespace-nowrap">
                 <input
@@ -186,16 +210,19 @@
                 />
                 Colored Path
               </label>
+
+              <div class="divider" />
+
+              <label class="relative flex whitespace-nowrap">
+                <input type="checkbox" bind:checked={$state.visible.bot} class="toggle" />
+                Bot
+              </label>
             </div>
 
             {#if pathPoint}
               <h1 class="text-3xl mt-3">Point Config</h1>
               <label class="relative">
-                <input
-                  type="checkbox"
-                  bind:checked={pathPoint.reverse}
-                  class="toggle"
-                />
+                <input type="checkbox" bind:checked={pathPoint.reverse} class="toggle" />
                 Reverse here
               </label>
             {/if}
@@ -207,9 +234,8 @@
                 .fill(null)
                 .map( (_, i) => ({ key: Object.keys($config.flags)[i], type: $config.flags[Object.keys($config.flags)[i]] }) ) as flag}
                 <div class="flex items-center gap-3">
-                  <button
-                    class="button py-[2px]"
-                    on:click={() => removeFlag(flag.key)}>Delete</button
+                  <button class="button py-[2px]" on:click={() => removeFlag(flag.key)}
+                    >Delete</button
                   >
                   <div class="h-7 border-white border-r-2" />
                   {flag.key}: {flag.type}
@@ -272,8 +298,7 @@
                       on:change={(e) => {
                         // @ts-ignore
                         if (e.target.checked && point) {
-                          point.flagsAny[flag.key] =
-                            flag.type === "boolean" ? false : 0;
+                          point.flagsAny[flag.key] = flag.type === "boolean" ? false : 0;
                         } else if (point) {
                           delete point.flagsAny[flag.key];
                           point = point;
@@ -331,9 +356,7 @@
               </label>
               <button id="import" class="button" on:click={load}>Import</button>
               <button id="save" class="button" on:click={save}>Save</button>
-              <button id="saveas" class="button" on:click={saveAs}
-                >Save As</button
-              >
+              <button id="saveas" class="button" on:click={saveAs}>Save As</button>
             </div>
           </div>
         </div>
@@ -349,13 +372,9 @@
   ></div>
 
   <!-- footer -->
-  <div
-    class="h-12 bg-slate-900 text-white flex items-center text-xl px-5 font-mono"
-  >
-    Copyright &COPY; <a
-      href="https://haelp.dev"
-      class="ml-2 underline"
-      target="_blank">Joshua Liu</a
+  <div class="h-12 bg-slate-900 text-white flex items-center text-xl px-5 font-mono">
+    Copyright &COPY; <a href="https://haelp.dev" class="ml-2 underline" target="_blank"
+      >Joshua Liu</a
     >, Brandon Ni {new Date().getFullYear()}
     <span class="ml-auto">v{CONSTANTS.version}</span>
   </div>

@@ -346,8 +346,10 @@
       } else if (e.key.toLowerCase() === "z" && e.ctrlKey) undo();
     });
 
-    window.addEventListener("beforeunload", (e) => {
+		// @ts-expect-error
+    bindRemovable(window, "beforeunload", (e) => {
       e.preventDefault();
+			// @ts-expect-error
       e.returnValue = "";
     });
 

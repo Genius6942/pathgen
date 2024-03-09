@@ -19,9 +19,9 @@
     @apply rounded-b-2xl;
   }
 
-	.divider {
-		@apply border-r-2 border-white h-7;
-	}
+  .divider {
+    @apply border-r-2 border-white h-7;
+  }
 
   .toggle {
     @apply w-11 h-0 cursor-pointer inline-block;
@@ -51,6 +51,22 @@
     @apply disabled:after:bg-opacity-75 disabled:cursor-not-allowed;
     @apply disabled:checked:before:bg-opacity-40;
   }
+
+  .slider {
+    -webkit-appearance: none;
+    appearance: none;
+    @apply appearance-none bg-transparent cursor-pointer w-60;
+  }
+
+  .slider::-webkit-slider-runnable-track {
+    @apply h-2 bg-slate-600 rounded-full;
+  }
+
+  .slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    @apply w-4 h-4 bg-blue-600 rounded-full appearance-none -mt-1;
+  }
 }
 
 option {
@@ -62,18 +78,18 @@ option {
   appearance: none;
   width: 8px;
   height: 8px;
-	margin-left: 2px;
-	background-color: rgb(15 23 42);
+  margin-left: 2px;
+  background-color: rgb(15 23 42);
   border-radius: 9999px;
 }
 
 .scrollbar::-webkit-scrollbar-thumb {
-	background-color: rgb(71 85 105);
+  background-color: rgb(71 85 105);
   border-radius: 9999px;
 }
 
 .scrollbar::-webkit-scrollbar-track {
-	background-color: rgb(15 23 42);
+  background-color: rgb(15 23 42);
   border-radius: 9999px;
 }
 
@@ -85,6 +101,6 @@ input::-webkit-inner-spin-button {
 }
 
 /* Firefox */
-input[type=number] {
+input[type="number"] {
   -moz-appearance: textfield;
 }

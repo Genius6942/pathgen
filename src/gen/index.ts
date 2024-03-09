@@ -11,7 +11,7 @@ export * from "./utils";
 
 export type PathAlgorithm = "catmull-rom" | "cubic-spline";
 export const pathAlgorithms: {
-  [key in PathAlgorithm]: (path: PathPoint[]) => GeneratedPoint[];
+  [key in PathAlgorithm]: (path: PathPoint[], k: number) => GeneratedPoint[];
 } = {
   "catmull-rom": catmullRom,
   "cubic-spline": cubicSpline,

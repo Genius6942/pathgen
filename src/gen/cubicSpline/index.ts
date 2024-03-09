@@ -3,7 +3,7 @@ import { GeneratedPoint, Point, config as configStore } from "$utils";
 import { BezierSpline } from "./core";
 import { get } from "svelte/store";
 
-const inner_cubicSpline = (path: Point[]): GeneratedPoint[] => {
+const inner_cubicSpline = (path: Point[], k = 3): GeneratedPoint[] => {
   if (path.length < 2) return [];
 
   const config = get(configStore);
@@ -13,13 +13,14 @@ const inner_cubicSpline = (path: Point[]): GeneratedPoint[] => {
   const res = generator.generateSpline(
     config.distanceBetween,
     config.bot.maxVelocity,
-    config.bot.maxAcceleration
+    config.bot.maxAcceleration,
+    k
   );
 
   return res.map(([point, speed]) => new GeneratedPoint(point.x, point.y, speed));
 };
 
-export const cubicSpline = (path: PathPoint[]): GeneratedPoint[] => {
+export const cubicSpline = (path: PathPoint[], k = 3): GeneratedPoint[] => {
   if (path.length < 2) {
     return [];
   }
@@ -46,7 +47,7 @@ export const cubicSpline = (path: PathPoint[]): GeneratedPoint[] => {
 
   const generatedPaths = paths
     // generation
-    .map((p) => inner_cubicSpline(p))
+    .map((p) => inner_cubicSpline(p, k))
     // apply reversing to speeds
     .map((gen) => {
       reverse = !reverse;

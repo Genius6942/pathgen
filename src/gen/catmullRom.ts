@@ -51,7 +51,7 @@ const raw_catmullRom = (path: Point[]) => {
   return newPath;
 };
 
-export const catmullRom = (path: PathPoint[]): GeneratedPoint[] => {
+export const catmullRom = (path: PathPoint[], k = 3): GeneratedPoint[] => {
   if (path.length < 2) {
     return [];
   }
