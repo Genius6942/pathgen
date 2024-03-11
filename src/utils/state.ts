@@ -144,6 +144,7 @@ export interface AppState {
   generatedPoints: GeneratedPoint[];
   fileHandle: FileSystemFileHandle | null;
   editingMode: EditingMode;
+	handlesWhenSelected: boolean;
   visible: {
     points: boolean;
     handles: boolean;
@@ -161,6 +162,7 @@ export const state = writable<AppState>({
   generatedPoints: [],
   fileHandle: null,
   editingMode: "pathPoint",
+	handlesWhenSelected: false,
   visible: {
     points: true,
     handles: true,

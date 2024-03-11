@@ -229,51 +229,59 @@
             <div class="flex gap-3 relative items-center flex-wrap">
               Show:
 
-              <label class="relative flex">
+              <label class="relative flex gap-2">
+                Points
                 <input
                   type="checkbox"
                   bind:checked={$state.visible.points}
                   class="toggle"
                 />
-                Points
               </label>
               <div class="divider" />
-              <label class="relative flex">
+              <label class="relative flex gap-2">
+                Handles
                 <input
                   type="checkbox"
                   bind:checked={$state.visible.handles}
                   class="toggle"
                 />
-                Handles
               </label>
               <div class="divider" />
-              <label class="relative flex">
+              <label class="relative flex gap-2">
+                Flags
                 <input
                   type="checkbox"
                   bind:checked={$state.visible.flags}
                   class="toggle"
                 />
-                Flags
               </label>
 
               <div class="divider ml-14" />
 
-              <label class="relative flex whitespace-nowrap">
+              <label class="relative flex gap-2 whitespace-nowrap">
+                Colored Path
                 <input
                   type="checkbox"
                   bind:checked={$state.visible.coloredPath}
                   class="toggle"
                 />
-                Colored Path
               </label>
 
               <div class="divider" />
 
-              <label class="relative flex whitespace-nowrap">
-                <input type="checkbox" bind:checked={$state.visible.bot} class="toggle" />
+              <label class="relative flex gap-2 whitespace-nowrap">
                 Bot
+                <input type="checkbox" bind:checked={$state.visible.bot} class="toggle" />
               </label>
             </div>
+            <label class="flex items-center relative gap-3">
+              Show handles only when selected
+              <input
+                type="checkbox"
+                bind:checked={$state.handlesWhenSelected}
+                class="toggle"
+              />
+            </label>
 
             <!-- POINT CONFIG -->
             {#if pathPoint}

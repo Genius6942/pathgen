@@ -127,9 +127,13 @@ export const drawFlagPoints = (ctx: CanvasRenderingContext2D, mouse: Point) => {
 export const drawHandleLinks = (ctx: CanvasRenderingContext2D) => {
   const scale = ctx.canvas.height / CONSTANTS.scale;
   const layer = get(state).visible.layer;
+  const hws = get(state).handlesWhenSelected;
+  const s = get(state).selected;
 
-  get(points).forEach((point) => {
+  get(points).forEach((point, pointIndex) => {
     if (!point.layers.includes(layer)) return;
+    if (hws && (!s || s.type === "flag" || s.point !== pointIndex)) return;
+
     const p = transformPoint(point, ctx.canvas);
     point.handles.forEach((handle) => {
       const h = transformPoint(handle.add(point), ctx.canvas);
@@ -147,9 +151,12 @@ export const drawHandles = (ctx: CanvasRenderingContext2D, mouse: Point) => {
   const scale = ctx.canvas.height / CONSTANTS.scale;
   const m = transformPoint(mouse, ctx.canvas);
   const layer = get(state).visible.layer;
+  const hws = get(state).handlesWhenSelected;
+  const s = get(state).selected;
 
   get(points).forEach((point, pointIndex) => {
     if (!point.layers.includes(layer)) return;
+    if (hws && (!s || s.type === "flag" || s.point !== pointIndex)) return;
     const selection = get(state).selected;
     const selectedHandle = selection && selection.type === "handle" ? selection : null;
     point.handles.forEach((handle, handleIndex) => {
