@@ -120,9 +120,10 @@
       $state.selected = null;
       if ($state.visible.points) {
         const selectedPoint = $points.findIndex(
-          (point) => point.layers.includes($state.visible.layer) &&
+          (point) =>
+            point.layers.includes($state.visible.layer) &&
             transformPoint(point, canvas).distance(m) <=
-            CONSTANTS.point.radius * (size / CONSTANTS.scale)
+              CONSTANTS.point.radius * (size / CONSTANTS.scale)
         );
 
         if (selectedPoint >= 0) {
@@ -134,7 +135,7 @@
       }
       if ($state.visible.handles) {
         $points.forEach((point, pointIndex) => {
-					if (!point.layers.includes($state.visible.layer)) return;
+          if (!point.layers.includes($state.visible.layer)) return;
           const handleIndex = point.handles.findIndex(
             (handle) =>
               transformPoint(point.add(handle), canvas).distance(m) <=
@@ -155,10 +156,11 @@
         const selectedFlag = $flagPoints
           .map((point) => {
             const pathPoint = path[point.index];
-            return new PathPoint(pathPoint.x, pathPoint.y, {layers: [...point.layers]});
+            return new PathPoint(pathPoint.x, pathPoint.y, { layers: [...point.layers] });
           })
           .findIndex(
-            (point) => point.layers.includes($state.visible.layer) &&
+            (point) =>
+              point.layers.includes($state.visible.layer) &&
               point.distance(m) <= CONSTANTS.flag.radius * (size / CONSTANTS.scale)
           );
 
@@ -180,7 +182,13 @@
               p[p.length - 1].handles.push(new Point(-8, 0));
               p[p.length - 1].makeCollinear(0);
             }
-            p.push(new PathPoint(mouse.x, mouse.y, { flags: {}, handles }));
+            p.push(
+              new PathPoint(mouse.x, mouse.y, {
+                flags: {},
+                handles,
+                layers: [0, $state.visible.layer],
+              })
+            );
             return p;
           });
         } else if ($state.editingMode === "flagPoint") {
@@ -347,10 +355,10 @@
       } else if (e.key.toLowerCase() === "z" && e.ctrlKey) undo();
     });
 
-		// @ts-expect-error
+    // @ts-expect-error
     bindRemovable(window, "beforeunload", (e) => {
       e.preventDefault();
-			// @ts-expect-error
+      // @ts-expect-error
       e.returnValue = "";
     });
 
