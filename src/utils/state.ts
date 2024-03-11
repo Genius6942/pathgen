@@ -91,6 +91,7 @@ export interface PathConfig {
   flags: { [key: string]: "number" | "boolean" };
   distanceBetween: number;
   k: number;
+	layers: boolean;
   bot: {
     maxVelocity: number;
     maxAcceleration: number;
@@ -106,6 +107,7 @@ export const config = writable<PathConfig>({
   flags: {},
   distanceBetween: 0.5,
   k: 3,
+	layers: false,
   bot: {
     maxVelocity: 24,
     maxAcceleration: 12,

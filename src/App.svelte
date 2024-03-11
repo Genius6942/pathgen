@@ -46,27 +46,29 @@
 
 <main class="h-screen flex flex-col select-none">
   <div class="flex-grow flex justify-center">
-    <div class="flex flex-col justify-center items-center gap-3 p-3">
-      <button
-        class={`translate-y-0 transition-all hover:-translate-y-1 ${$state.visible.layer === maxLayer ? "opacity-0 cursor-default" : "opacity-100"}`}
-        on:click={() => {
-          $state.visible.layer = Math.min(maxLayer, $state.visible.layer + 1);
-        }}
-      >
-        <Fa icon={faUpLong} size="lg" />
-      </button>
-      <div class="whitespace-nowrap w-12 border-y-2 border-white text-center py-2">
-        {$state.visible.layer === 0 ? "All" : `Layer ${$state.visible.layer}`}
+    {#if $config.layers}
+      <div class="flex flex-col justify-center items-center gap-3 p-3">
+        <button
+          class={`translate-y-0 transition-all hover:-translate-y-1 ${$state.visible.layer === maxLayer ? "opacity-0 cursor-default" : "opacity-100"}`}
+          on:click={() => {
+            $state.visible.layer = Math.min(maxLayer, $state.visible.layer + 1);
+          }}
+        >
+          <Fa icon={faUpLong} size="lg" />
+        </button>
+        <div class="whitespace-nowrap w-12 border-y-2 border-white text-center py-2">
+          {$state.visible.layer === 0 ? "All" : `Layer ${$state.visible.layer}`}
+        </div>
+        <button
+          class={`translate-y-0 transition-all hover:translate-y-1 ${$state.visible.layer === 0 ? "opacity-0 cursor-default" : "opacity-100"}`}
+          on:click={() => {
+            $state.visible.layer = Math.max(0, $state.visible.layer - 1);
+          }}
+        >
+          <Fa icon={faDownLong} size="lg" />
+        </button>
       </div>
-      <button
-        class={`translate-y-0 transition-all hover:translate-y-1 ${$state.visible.layer === 0 ? "opacity-0 cursor-default" : "opacity-100"}`}
-        on:click={() => {
-          $state.visible.layer = Math.max(0, $state.visible.layer - 1);
-        }}
-      >
-        <Fa icon={faDownLong} size="lg" />
-      </button>
-    </div>
+    {/if}
     <div class="relative p-4 items-center" style="aspect-ratio: 1/1">
       <div
         class="h-full flex justify-center items-center border-white border-4 rounded-2xl overflow-hidden"
@@ -170,6 +172,11 @@
                   </option>
                 {/each}
               </select>
+            </label>
+
+            <label class="relative flex gap-3">
+              Enable layers
+              <input type="checkbox" bind:checked={$config.layers} class="toggle" />
             </label>
 
             <!-- BOT CONFIG -->
@@ -291,7 +298,7 @@
                 Reverse here
               </label>
             {/if}
-            {#if point}
+            {#if $config.layers && point}
               <div class="flex items-center relative gap-2 flex-wrap">
                 Layers:
                 {#each Array(maxLayer)
