@@ -61,6 +61,7 @@ export type FlagPoint = {
   index: number;
   flags: NonNullable<PathPointOptions["flags"]>;
   flagsAny: { [key: string]: any };
+	layers: number[];
 };
 
 export const flagPoints = writable<FlagPoint[]>([]);
@@ -77,6 +78,7 @@ export const addFlagPoint = (point: number) => {
       set flagsAny(val: any) {
         this.flags = val;
       },
+			layers: [0]
     });
     return f;
   });
@@ -151,6 +153,7 @@ export interface AppState {
     // other stuff related to rendering
     highlightIndex: number;
     coloredPath: boolean;
+		layer: number;
   };
 }
 export const state = writable<AppState>({
@@ -166,6 +169,7 @@ export const state = writable<AppState>({
 
     highlightIndex: -1,
     coloredPath: true,
+		layer: 0,
   },
 });
 
@@ -267,6 +271,7 @@ const importData = (data: any) => {
           flags: point.flags,
           handles: point.handles,
           reverse: point.reverse,
+					layers: point.layers
         })
     )
   );

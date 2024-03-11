@@ -120,7 +120,7 @@
       $state.selected = null;
       if ($state.visible.points) {
         const selectedPoint = $points.findIndex(
-          (point) =>
+          (point) => point.layers.includes($state.visible.layer) &&
             transformPoint(point, canvas).distance(m) <=
             CONSTANTS.point.radius * (size / CONSTANTS.scale)
         );
@@ -134,6 +134,7 @@
       }
       if ($state.visible.handles) {
         $points.forEach((point, pointIndex) => {
+					if (!point.layers.includes($state.visible.layer)) return;
           const handleIndex = point.handles.findIndex(
             (handle) =>
               transformPoint(point.add(handle), canvas).distance(m) <=
@@ -154,10 +155,10 @@
         const selectedFlag = $flagPoints
           .map((point) => {
             const pathPoint = path[point.index];
-            return new Point(pathPoint.x, pathPoint.y);
+            return new PathPoint(pathPoint.x, pathPoint.y, {layers: [...point.layers]});
           })
           .findIndex(
-            (point) =>
+            (point) => point.layers.includes($state.visible.layer) &&
               point.distance(m) <= CONSTANTS.flag.radius * (size / CONSTANTS.scale)
           );
 

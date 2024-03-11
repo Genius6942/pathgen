@@ -15,6 +15,10 @@
   import { pathAlgorithms } from "./gen";
   import { CONSTANTS, Point, saveState } from "$utils";
   import Graph from "$utils/Graph.svelte";
+  import { backgrounds } from "$utils/background";
+
+  import Fa from "svelte-fa";
+  import { faAdd, faDownLong, faUpLong } from "@fortawesome/free-solid-svg-icons";
 
   let newFlagName = "";
   let newFlagType: "boolean" | "number" = "boolean";
@@ -34,12 +38,39 @@
   let initialHeight = -1;
   let container: HTMLDivElement | null = null;
   $: if (container && initialHeight < 0) initialHeight = container.offsetHeight;
+
+  $: maxLayer =
+    $points.reduce((a, b) => Math.max(a, ...b.layers), 0) ??
+    Math.max(...pathPoint?.layers!);
 </script>
 
-<main class="h-screen flex flex-col">
+<main class="h-screen flex flex-col select-none">
   <div class="flex-grow flex justify-center">
+    <div class="flex flex-col justify-center items-center gap-3 p-3">
+      <button
+        class={`translate-y-0 transition-all hover:-translate-y-1 ${$state.visible.layer === maxLayer ? "opacity-0 cursor-default" : "opacity-100"}`}
+        on:click={() => {
+          $state.visible.layer = Math.min(maxLayer, $state.visible.layer + 1);
+        }}
+      >
+        <Fa icon={faUpLong} size="lg" />
+      </button>
+      <div class="whitespace-nowrap w-12 border-y-2 border-white text-center py-2">
+        {$state.visible.layer === 0 ? "All" : `Layer ${$state.visible.layer}`}
+      </div>
+      <button
+        class={`translate-y-0 transition-all hover:translate-y-1 ${$state.visible.layer === 0 ? "opacity-0 cursor-default" : "opacity-100"}`}
+        on:click={() => {
+          $state.visible.layer = Math.max(0, $state.visible.layer - 1);
+        }}
+      >
+        <Fa icon={faDownLong} size="lg" />
+      </button>
+    </div>
     <div class="relative p-4 items-center" style="aspect-ratio: 1/1">
-      <div class="h-full flex justify-center items-center">
+      <div
+        class="h-full flex justify-center items-center border-white border-4 rounded-2xl overflow-hidden"
+      >
         <Renderer />
       </div>
     </div>
@@ -111,9 +142,34 @@
                 {/each}
               </select>
             </label>
+            {#if $config.algorithm === "cubic-spline"}
+              <label>
+                K: ({$config.k.toFixed(1)})
+                <input
+                  type="range"
+                  class="slider"
+                  min={1}
+                  max={10}
+                  step={0.1}
+                  bind:value={$config.k}
+                />
+              </label>
+            {/if}
             <label>
-							K: ({$config.k.toFixed(2)})
-              <input type="range" class="slider" min={1} max={10} step={.1} bind:value={$config.k}/>
+              Background:
+              <select
+                bind:value={$config.background}
+                class="bg-transparent text-lg border-white border rounded-full p-1"
+              >
+                {#each Object.keys(backgrounds) as background}
+                  <option value={background}>
+                    {background
+                      .split("-")
+                      .map((item) => item[0].toUpperCase() + item.slice(1))
+                      .join(" ")}
+                  </option>
+                {/each}
+              </select>
             </label>
 
             <!-- BOT CONFIG -->
@@ -143,16 +199,16 @@
                 <input
                   type="number"
                   class="bg-transparent border-2 border-white border-dashed rounded-2xl px-[2px] py-[1px] text-center outline-none focus:border-solid transition-all duration-200 ease-in-out w-20"
-                  bind:value={$config.bot.maxVelocity}
+                  bind:value={$config.bot.width}
                 />
               </label>
               <div class="divider"></div>
               <label>
-                Height:
+                Length:
                 <input
                   type="number"
                   class="bg-transparent border-2 border-white border-dashed rounded-2xl px-[2px] py-[1px] text-center outline-none focus:border-solid transition-all duration-200 ease-in-out w-20"
-                  bind:value={$config.bot.maxAcceleration}
+                  bind:value={$config.bot.length}
                 />
               </label>
             </div>
@@ -219,6 +275,7 @@
               </label>
             </div>
 
+            <!-- POINT CONFIG -->
             {#if pathPoint}
               <h1 class="text-3xl mt-3">Point Config</h1>
               <label class="relative">
@@ -226,9 +283,39 @@
                 Reverse here
               </label>
             {/if}
+            {#if point}
+              <div class="flex items-center relative gap-2 flex-wrap">
+                Layers:
+                {#each Array(maxLayer)
+                  .fill(0)
+                  .map((_, i) => i + 1) as i}
+                  <label class="relative flex whitespace-nowrap gap-2">
+                    {i}
+                    <input
+                      type="checkbox"
+                      on:change={() => {
+                        if (point) {
+                          if (point.layers.includes(i)) {
+                            point.layers = point.layers.filter((layer) => layer !== i);
+                          } else {
+                            point.layers.push(i);
+                          }
+                        }
+                      }}
+                      checked={point.layers.includes(i)}
+                      class="toggle"
+                    />
+                  </label>
+                  <div class="divider" />
+                {/each}
+                <button on:click={() => point && point.layers.push(maxLayer + 1)}>
+                  <Fa icon={faAdd} />
+                </button>
+              </div>
+            {/if}
 
+            <!-- FLAGS -->
             <h1 class="text-3xl mt-3">Flags</h1>
-
             {#if !point}
               {#each Array(Object.keys($config.flags).length)
                 .fill(null)

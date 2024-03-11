@@ -4,6 +4,7 @@ export interface PathPointOptions {
   flags?: { [key: string]: number | boolean };
   handles?: { x: number; y: number }[];
   reverse?: boolean;
+  layers?: number[];
 }
 
 export interface PathPointExport {
@@ -12,12 +13,14 @@ export interface PathPointExport {
   flags: NonNullable<PathPointOptions["flags"]>;
   handles: { x: number; y: number }[];
   reverse: boolean;
+  layers: number[];
 }
 
 export class PathPoint extends Point {
   flags: NonNullable<PathPointOptions["flags"]>;
   handles: Point[];
   private _reverse = false;
+  layers: number[];
 
   constructor(x: number, y: number, options: PathPointOptions = {}) {
     super(x, y);
@@ -25,6 +28,7 @@ export class PathPoint extends Point {
     const handles = options.handles || [];
     this.handles = handles.map((handle) => new Point(handle.x, handle.y));
     this.reverse = !!options.reverse;
+    this.layers = options.layers || [0];
   }
 
   get flagsAny() {
@@ -70,6 +74,7 @@ export class PathPoint extends Point {
       flags: this.flags,
       handles: this.handles.map((handle) => ({ x: handle.x, y: handle.y })),
       reverse: this.reverse,
+      layers: this.layers,
     }) as this;
   }
 
@@ -80,6 +85,7 @@ export class PathPoint extends Point {
       flags: JSON.parse(JSON.stringify(this.flags)),
       handles: this.handles.map((handle) => ({ x: handle.x, y: handle.y })),
       reverse: this.reverse,
+      layers: this.layers,
     };
   }
 
@@ -88,6 +94,7 @@ export class PathPoint extends Point {
       flags: point.flags,
       handles: point.handles,
       reverse: point.reverse,
+      layers: point.layers,
     });
   }
 }

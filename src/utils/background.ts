@@ -1,6 +1,6 @@
 import overUnder from "../assets/backgrounds/over-under.png";
-import overUnderSkills from "../assets/backgrounds/over-under.png";
-import defaultBackground from "../assets/backgrounds/over-under.png";
+import overUnderSkills from "../assets/backgrounds/over-under-skills.png";
+import defaultBackground from "../assets/backgrounds/default.png";
 
 export type Background = "over-under" | "over-under-skills" | "default";
 
