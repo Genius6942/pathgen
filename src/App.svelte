@@ -144,19 +144,17 @@
                 {/each}
               </select>
             </label>
-            {#if $config.algorithm === "cubic-spline"}
-              <label>
-                K: ({$config.k.toFixed(1)})
-                <input
-                  type="range"
-                  class="slider"
-                  min={1}
-                  max={10}
-                  step={0.1}
-                  bind:value={$config.k}
-                />
-              </label>
-            {/if}
+            <label>
+              K: ({$config.k.toFixed(1)})
+              <input
+                type="range"
+                class="slider"
+                min={1}
+                max={10}
+                step={0.1}
+                bind:value={$config.k}
+              />
+            </label>
             <label>
               Background:
               <select
