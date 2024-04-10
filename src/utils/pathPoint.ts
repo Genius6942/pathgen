@@ -1,4 +1,6 @@
-import { CONSTANTS, Point, type PointExport } from ".";
+import { Point } from ".";
+
+export type FlagType = "number" | "boolean" | "action";
 
 export interface PathPointOptions {
   flags?: { [key: string]: number | boolean };

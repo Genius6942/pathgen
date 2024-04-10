@@ -13,7 +13,7 @@
     undo,
   } from "./utils/state";
   import { pathAlgorithms } from "./gen";
-  import { CONSTANTS, Point, saveState } from "$utils";
+  import { CONSTANTS, Point, saveState, type FlagType } from "$utils";
   import Graph from "$utils/Graph.svelte";
   import { backgrounds } from "$utils/background";
 
@@ -21,7 +21,7 @@
   import { faAdd, faDownLong, faUpLong } from "@fortawesome/free-solid-svg-icons";
 
   let newFlagName = "";
-  let newFlagType: "boolean" | "number" = "boolean";
+  let newFlagType: FlagType = "boolean";
 
   $: point =
     $state.selected && $state.selected.type === "point"
@@ -38,7 +38,7 @@
   let initialHeight = -1;
   let container: HTMLDivElement | null = null;
   $: if (container && initialHeight < 0) initialHeight = container.offsetHeight;
-
+	
   $: maxLayer =
     $points.reduce((a, b) => Math.max(a, ...b.layers), 0) ??
     Math.max(...pathPoint?.layers!);
@@ -334,9 +334,9 @@
                 .fill(null)
                 .map( (_, i) => ({ key: Object.keys($config.flags)[i], type: $config.flags[Object.keys($config.flags)[i]] }) ) as flag}
                 <div class="flex items-center gap-3">
-                  <button class="button py-[2px]" on:click={() => removeFlag(flag.key)}
-                    >Delete</button
-                  >
+                  <button class="button py-[2px]" on:click={() => removeFlag(flag.key)}>
+                    Delete
+                  </button>
                   <div class="h-7 border-white border-r-2" />
                   {flag.key}: {flag.type}
                 </div>
@@ -366,6 +366,7 @@
                 <select bind:value={newFlagType} class="bg-transparent">
                   <option value="boolean">Boolean</option>
                   <option value="number">Number</option>
+                  <option value="action">Action</option>
                 </select>
                 <button
                   class="button"
@@ -398,7 +399,7 @@
                       on:change={(e) => {
                         // @ts-ignore
                         if (e.target.checked && point) {
-                          point.flagsAny[flag.key] = flag.type === "boolean" ? false : 0;
+                          point.flagsAny[flag.key] = flag.type === "boolean" ? false : flag.type === "action" ? true : 0;
                         } else if (point) {
                           delete point.flagsAny[flag.key];
                           point = point;
@@ -424,7 +425,7 @@
                           {flag.key}
                         </span>
                       </label>
-                    {:else}
+                    {:else if flag.type === "number"}
                       <label for={flag.key}>{flag.key}</label>
                       <input
                         type="number"
@@ -475,7 +476,7 @@
   <div class="h-12 bg-slate-900 text-white flex items-center text-xl px-5 font-mono">
     Copyright &COPY; <a href="https://haelp.dev" class="ml-2 underline" target="_blank"
       >Joshua Liu</a
-    >, Brandon Ni {new Date().getFullYear()}
+    >, Brandon Ni, Michael Han {new Date().getFullYear()}
     <span class="ml-auto">v{CONSTANTS.version}</span>
   </div>
 </main>

@@ -10,6 +10,7 @@ import {
   FSHandler,
   PathPoint,
   Point,
+  type FlagType,
   type PathPointExport,
   type PathPointOptions,
   type PointExport,
@@ -88,7 +89,7 @@ export interface PathConfig {
   algorithm: PathAlgorithm;
   background: Background;
   autosave: boolean;
-  flags: { [key: string]: "number" | "boolean" };
+  flags: { [key: string]: FlagType };
   distanceBetween: number;
   k: number;
 	layers: boolean;
@@ -397,7 +398,7 @@ config.subscribe(() => {
   if (get(config).autosave) save();
 });
 
-export const addFlag = (flag: string, type: "boolean" | "number", overWrite = false) => {
+export const addFlag = (flag: string, type: FlagType, overWrite = false) => {
   if (flag in get(config).flags && !overWrite) throw new Error("Flag already exists");
   config.update((c) => {
     c.flags[flag] = type;
